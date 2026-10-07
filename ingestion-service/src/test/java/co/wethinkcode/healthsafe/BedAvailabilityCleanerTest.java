@@ -12,4 +12,13 @@ public class BedAvailabilityCleanerTest {
         int result = BedAvailabilityCleaner.clean(rawBedsAvailable);
         assertEquals(3, result);
     }
+
+    @Test
+
+    void convertZeroFromCsvToInteger(){
+        String rawBedsAvailable = "0";
+        int result = BedAvailabilityCleaner.clean(rawBedsAvailable);
+        assertEquals(0,result);
+
+    }
 }
