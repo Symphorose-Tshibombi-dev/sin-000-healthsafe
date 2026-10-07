@@ -21,4 +21,20 @@ public class BedAvailabilityCleanerTest {
         assertEquals(0,result);
 
     }
+
+    @Test
+
+    void rejectNegativeBedAvailability(){
+        String rawBedsAvailable = "-1";
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                ()-> BedAvailabilityCleaner.clean(rawBedsAvailable)
+        );
+
+        assertEquals("ERROR: Expected positive number",exception.getMessage());
+
+    }
+
+
 }
