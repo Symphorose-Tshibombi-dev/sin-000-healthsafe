@@ -13,4 +13,31 @@ public class WingNameCleanerTest {
         String result = WingNameCleaner.clean(rawWingName);
         assertEquals("East Wing" , result);
     }
+
+    @Test
+
+    void shouldCapitaliseNorthWing() {
+        String rawWingName = "north wing";
+
+        String result = WingNameCleaner.clean(rawWingName);
+        assertEquals("North Wing" , result);
+    }
+
+    @Test
+
+    void shouldCapitaliseSouthWing() {
+        String rawWingName = "south wing";
+
+        String result = WingNameCleaner.clean(rawWingName);
+        assertEquals("South Wing" , result);
+    }
+
+    @Test
+
+    void shouldCapitaliseWestWing() {
+        String rawWingName = "west wing";
+
+        String result = WingNameCleaner.clean(rawWingName);
+        assertEquals("West Wing" , result);
+    }
 }

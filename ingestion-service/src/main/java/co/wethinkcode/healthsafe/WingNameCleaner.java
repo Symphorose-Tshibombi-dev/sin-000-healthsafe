@@ -3,14 +3,15 @@ package co.wethinkcode.healthsafe;
 public class WingNameCleaner {
 
     public static String clean(String rawWingName){
-        if(rawWingName.equals("east wing")){
-            rawWingName = rawWingName.substring(0,1).toUpperCase() +
-                    rawWingName.substring(1,5).toLowerCase()+
-                    rawWingName.substring(5,6).toUpperCase() +
-                    rawWingName.substring(6).toLowerCase();
+        String[] words = rawWingName.toLowerCase().split(" ");
 
+
+        for (int i = 0; i < words.length; i++){
+            words[i] =
+                    words[i].substring(0, 1).toUpperCase() +
+                    words[i].substring(1).toLowerCase();
         }
 
-        return rawWingName;
+        return String.join(" ",words);
     }
 }
