@@ -8,7 +8,13 @@ public class BedAvailabilityCleaner {
             return null;
         }
 
-        int bedsAvailable = Integer.parseInt(rawBedsAvailable);
+        int bedsAvailable;
+
+        try{ bedsAvailable = Integer.parseInt(rawBedsAvailable);
+
+        }catch(NumberFormatException exception){
+            throw new IllegalArgumentException("ERROR: Expected numeric entry");
+        }
 
         if(bedsAvailable < 0){
             throw new IllegalArgumentException("ERROR: Expected positive number");

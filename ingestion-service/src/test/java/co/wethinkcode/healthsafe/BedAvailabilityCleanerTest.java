@@ -45,4 +45,17 @@ public class BedAvailabilityCleanerTest {
         assertNull(result);
     }
 
+    @Test
+
+    void rejectNonNumericBedAvailability(){
+        String rawBedsAvailable = "five";
+
+        IllegalArgumentException exception = assertThrows(
+              IllegalArgumentException.class,
+                ()-> BedAvailabilityCleaner.clean(rawBedsAvailable)
+        );
+
+        assertEquals("ERROR: Expected numeric entry",exception.getMessage());
+    }
+
 }
