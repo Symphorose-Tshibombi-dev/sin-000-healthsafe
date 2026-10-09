@@ -40,4 +40,12 @@ public class WingNameCleanerTest {
         String result = WingNameCleaner.clean(rawWingName);
         assertEquals("West Wing" , result);
     }
+
+    @Test
+    void shouldHandleExtraSpacesInWingName() {
+        String rawWingName = " south   wing ";
+
+        String result = WingNameCleaner.clean(rawWingName);
+        assertEquals("South Wing" , result);
+    }
 }

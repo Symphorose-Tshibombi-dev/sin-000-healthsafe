@@ -3,7 +3,7 @@ package co.wethinkcode.healthsafe;
 public class WingNameCleaner {
 
     public static String clean(String rawWingName){
-        String[] words = rawWingName.toLowerCase().split(" ");
+        String[] words = rawWingName.toLowerCase().trim().split("\\s+");
 
 
         for (int i = 0; i < words.length; i++){
