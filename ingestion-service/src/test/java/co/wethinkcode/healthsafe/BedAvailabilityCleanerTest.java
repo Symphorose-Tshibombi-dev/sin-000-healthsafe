@@ -67,4 +67,14 @@ public class BedAvailabilityCleanerTest {
         assertNull(result);
     }
 
+    @Test
+
+    void handleNumericWithExtraSpace(){
+
+        String rawBedsAvailability = " 12 ";
+
+        Integer result = BedAvailabilityCleaner.clean(rawBedsAvailability);
+        assertEquals(12 , result);
+    }
+
 }

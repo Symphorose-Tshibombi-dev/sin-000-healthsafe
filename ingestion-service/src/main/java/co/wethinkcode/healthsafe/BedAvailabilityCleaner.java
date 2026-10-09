@@ -4,13 +4,15 @@ public class BedAvailabilityCleaner {
 
     public static Integer clean(String rawBedsAvailable){
 
-        if(rawBedsAvailable.trim().equalsIgnoreCase("N/A")){
+        String cleanedValue = rawBedsAvailable.trim();
+
+        if(cleanedValue.equalsIgnoreCase("N/A")){
             return null;
         }
 
         int bedsAvailable;
 
-        try{ bedsAvailable = Integer.parseInt(rawBedsAvailable);
+        try{ bedsAvailable = Integer.parseInt(cleanedValue);
 
         }catch(NumberFormatException exception){
             throw new IllegalArgumentException("ERROR: Expected numeric entry");
