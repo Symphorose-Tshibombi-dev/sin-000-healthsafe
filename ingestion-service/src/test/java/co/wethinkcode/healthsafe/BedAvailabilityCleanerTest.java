@@ -36,5 +36,13 @@ public class BedAvailabilityCleanerTest {
 
     }
 
+    @Test
+
+    void shouldTreatNullAsUnknown(){
+        String rawBedsAvailable = "N/A";
+        Integer result = BedAvailabilityCleaner.clean(rawBedsAvailable);
+
+        assertNull(result);
+    }
 
 }
