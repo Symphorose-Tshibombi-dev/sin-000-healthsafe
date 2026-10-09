@@ -6,7 +6,7 @@ public class BedAvailabilityCleaner {
 
         String cleanedValue = rawBedsAvailable.trim();
 
-        if(cleanedValue.equalsIgnoreCase("N/A")){
+        if(cleanedValue.equalsIgnoreCase("N/A")|| cleanedValue.isEmpty()){
             return null;
         }
 

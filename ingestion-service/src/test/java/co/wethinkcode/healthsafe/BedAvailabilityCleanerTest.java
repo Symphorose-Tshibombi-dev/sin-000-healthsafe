@@ -9,7 +9,7 @@ public class BedAvailabilityCleanerTest {
 
     void convertValidBedNumberCsvToInteger() {
         String rawBedsAvailable = "3";
-        int result = BedAvailabilityCleaner.clean(rawBedsAvailable);
+        Integer result = BedAvailabilityCleaner.clean(rawBedsAvailable);
         assertEquals(3, result);
     }
 
@@ -17,7 +17,7 @@ public class BedAvailabilityCleanerTest {
 
     void convertZeroFromCsvToInteger(){
         String rawBedsAvailable = "0";
-        int result = BedAvailabilityCleaner.clean(rawBedsAvailable);
+        Integer result = BedAvailabilityCleaner.clean(rawBedsAvailable);
         assertEquals(0,result);
 
     }
@@ -77,4 +77,12 @@ public class BedAvailabilityCleanerTest {
         assertEquals(12 , result);
     }
 
+    @Test
+
+    void handleEmptyBedAvailability() {
+        String rawBedsAvailability = " ";
+
+        Integer result = BedAvailabilityCleaner.clean(rawBedsAvailability);
+        assertNull(result);
+    }
 }
