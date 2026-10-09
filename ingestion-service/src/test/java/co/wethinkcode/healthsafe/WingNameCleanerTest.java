@@ -48,4 +48,13 @@ public class WingNameCleanerTest {
         String result = WingNameCleaner.clean(rawWingName);
         assertEquals("South Wing" , result);
     }
+
+    @Test
+
+    void shouldHandleMissingWingName(){
+        String rawWingName = "";
+
+        String result = WingNameCleaner.clean(rawWingName);
+        assertNull(result);
+    }
 }
