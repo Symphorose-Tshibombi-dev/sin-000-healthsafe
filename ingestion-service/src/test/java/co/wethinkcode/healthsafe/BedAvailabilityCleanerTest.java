@@ -80,7 +80,16 @@ public class BedAvailabilityCleanerTest {
     @Test
 
     void handleEmptyBedAvailability() {
-        String rawBedsAvailability = " ";
+        String rawBedsAvailability = "";
+
+        Integer result = BedAvailabilityCleaner.clean(rawBedsAvailability);
+        assertNull(result);
+    }
+
+    @Test
+
+    void handleNullBedAvailability() {
+        String rawBedsAvailability = null;
 
         Integer result = BedAvailabilityCleaner.clean(rawBedsAvailability);
         assertNull(result);

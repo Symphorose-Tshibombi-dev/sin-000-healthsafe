@@ -4,6 +4,11 @@ public class BedAvailabilityCleaner {
 
     public static Integer clean(String rawBedsAvailable){
 
+        if(rawBedsAvailable == null){
+            return null;
+        }
+
+
         String cleanedValue = rawBedsAvailable.trim();
 
         if(cleanedValue.equalsIgnoreCase("N/A")|| cleanedValue.isEmpty()){
