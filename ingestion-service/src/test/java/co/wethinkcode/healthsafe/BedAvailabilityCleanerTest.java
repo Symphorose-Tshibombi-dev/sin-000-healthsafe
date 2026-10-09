@@ -58,4 +58,13 @@ public class BedAvailabilityCleanerTest {
         assertEquals("ERROR: Expected numeric entry",exception.getMessage());
     }
 
+    @Test
+
+    void handleNAWithExtraSpaces(){
+        String rawBedsAvailable = " N/A ";
+
+        Integer result = BedAvailabilityCleaner.clean(rawBedsAvailable);
+        assertNull(result);
+    }
+
 }

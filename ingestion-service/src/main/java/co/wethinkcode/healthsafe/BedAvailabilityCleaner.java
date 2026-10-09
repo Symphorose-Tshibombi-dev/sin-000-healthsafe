@@ -4,7 +4,7 @@ public class BedAvailabilityCleaner {
 
     public static Integer clean(String rawBedsAvailable){
 
-        if(rawBedsAvailable.equalsIgnoreCase("N/A")){
+        if(rawBedsAvailable.trim().equalsIgnoreCase("N/A")){
             return null;
         }
 
