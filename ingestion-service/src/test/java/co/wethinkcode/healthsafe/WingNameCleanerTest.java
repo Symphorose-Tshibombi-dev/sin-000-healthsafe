@@ -57,4 +57,13 @@ public class WingNameCleanerTest {
         String result = WingNameCleaner.clean(rawWingName);
         assertNull(result);
     }
+
+    @Test
+
+    void shouldHandleNullWingName(){
+        String rawWingName = null;
+
+        String result = WingNameCleaner.clean(rawWingName);
+        assertNull(result);
+    }
 }

@@ -4,7 +4,7 @@ public class WingNameCleaner {
 
     public static String clean(String rawWingName){
 
-        if(rawWingName.trim().isEmpty()){
+        if( rawWingName == null || rawWingName.trim().isEmpty()){
             return null;
         }
         String[] words = rawWingName.toLowerCase().trim().split("\\s+");
