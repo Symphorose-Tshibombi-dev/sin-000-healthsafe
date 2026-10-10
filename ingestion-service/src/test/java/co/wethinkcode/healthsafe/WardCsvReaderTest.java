@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class WardCsvReaderTest {
 
     @Test
-    void shouldReadCsvHeader() {
+    void shouldReadCsvHeader() throws Exception {
 
         String[] expectedHeaders = {"wing_name","beds_available"};
         String[] result = WardCsvReader.readHeaders("sample-wards.csv");
