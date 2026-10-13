@@ -9,9 +9,13 @@ public class WardIdCleaner {
 
 
         if (Placeholders.isPlaceholder(rawWardId)){
-            throw new IllegalArgumentException("ERROR: Ward ID is required");
+            throw new IllegalArgumentException("ERROR: Expected ward ID entry.");
         }
         String wardId = rawWardId.trim().toUpperCase();
+
+        if (!VALID_ID.matcher(wardId).matches()) {
+            throw new IllegalArgumentException("ERROR: Invalid ward ID format.");
+        }
         return wardId;
     }
 }
