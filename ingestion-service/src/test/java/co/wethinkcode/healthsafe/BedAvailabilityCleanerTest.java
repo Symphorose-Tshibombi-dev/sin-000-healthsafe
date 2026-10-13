@@ -46,6 +46,15 @@ public class BedAvailabilityCleanerTest {
     }
 
     @Test
+    void shouldTreatPlaceholdersAsUnknown() throws Exception {
+        assertNull(BedAvailabilityCleaner.clean("TBD"));
+        assertNull(BedAvailabilityCleaner.clean("unknown"));
+        assertNull(BedAvailabilityCleaner.clean("-"));
+        assertNull(BedAvailabilityCleaner.clean("NaN"));
+        assertNull(BedAvailabilityCleaner.clean("n/a"));
+    }
+
+    @Test
 
     void rejectNonNumericBedAvailability(){
         String rawBedsAvailable = "five";
