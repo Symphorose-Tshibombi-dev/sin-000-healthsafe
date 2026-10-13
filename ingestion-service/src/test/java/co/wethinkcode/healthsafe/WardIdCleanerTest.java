@@ -14,4 +14,13 @@ public class WardIdCleanerTest {
         String result = WardIdCleaner.clean(rawWardId);
         assertEquals("W-05" ,result);
     }
+
+    @Test
+
+    void shouldTrimPadding(){
+        String rawWardId = " W-03 ";
+
+        String result = WardIdCleaner.clean(rawWardId);
+        assertEquals("W-03",result);
+    }
 }

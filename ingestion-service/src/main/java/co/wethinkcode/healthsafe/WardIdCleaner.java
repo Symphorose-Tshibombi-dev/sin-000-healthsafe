@@ -7,10 +7,11 @@ public class WardIdCleaner {
 
     public static String clean(String rawWardId){
 
-        String wardId = rawWardId.toUpperCase();
+
         if (Placeholders.isPlaceholder(rawWardId)){
             throw new IllegalArgumentException("ERROR: Ward ID is required");
         }
+        String wardId = rawWardId.trim().toUpperCase();
         return wardId;
     }
 }
