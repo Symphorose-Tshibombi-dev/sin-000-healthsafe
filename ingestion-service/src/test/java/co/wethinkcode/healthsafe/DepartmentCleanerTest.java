@@ -37,18 +37,24 @@ public class DepartmentCleanerTest {
     @Test
 
     void shouldTitleCaseOtherDepartments(){
-        String rawWingId = "cardiology";
+        String rawDepartmentName = "cardiology";
 
-        String result = DepartmentCleaner.clean(rawWingId);
+        String result = DepartmentCleaner.clean(rawDepartmentName);
         assertEquals("Cardiology", result);
     }
 
     @Test
     void shouldTrimPadding(){
-        String rawWingId = " cardiology ";
+        String rawDepartmentName = " cardiology ";
 
-        String result = DepartmentCleaner.clean(rawWingId);
+        String result = DepartmentCleaner.clean(rawDepartmentName);
         assertEquals("Cardiology",result);
     }
 
+    @Test
+    void shouldReturnNullForMissingOrPlaceholder() {
+        assertNull(DepartmentCleaner.clean(null));
+        assertNull(DepartmentCleaner.clean("   "));
+        assertNull(DepartmentCleaner.clean("TBD"));
+    }
 }
