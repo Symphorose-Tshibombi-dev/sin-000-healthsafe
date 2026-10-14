@@ -3,6 +3,7 @@ package co.wethinkcode.healthsafe;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class DepartmentCleanerTest {
     @Test
@@ -33,6 +34,21 @@ public class DepartmentCleanerTest {
 
 
 
-}
+    @Test
+
+    void shouldTitleCaseOtherDepartments(){
+        String rawWingId = "cardiology";
+
+        String result = DepartmentCleaner.clean(rawWingId);
+        assertEquals("Cardiology", result);
+    }
+
+    @Test
+    void shouldTrimPadding(){
+        String rawWingId = " cardiology ";
+
+        String result = DepartmentCleaner.clean(rawWingId);
+        assertEquals("Cardiology",result);
+    }
 
 }
