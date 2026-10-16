@@ -34,5 +34,22 @@ public class WardIngestorTest {
         assertTrue(ward.notes().contains("five"));
     }
 
+    @Test
+    void shouldSkipRowWithMissingWard(){
+        IngestionResult result = WardIngestor.ingest(
+                rows(new String[]{" ", "East Wing", "Oncology", "4"}));
 
+        assertTrue(result.wards().isEmpty());
+        assertEquals(1, result.issues().size());
+        assertTrue(result.issues().get(0).startsWith("Line 2"));
+    }
+
+    @Test
+    void shouldSkipRowWithWrongColumnCount() {
+        IngestionResult result = WardIngestor.ingest(
+                rows(new String[]{"W-01", "East Wing"}));
+
+        assertTrue(result.wards().isEmpty());
+        assertTrue(result.issues().get(0).contains("expected 4 columns"));
+    }
 }
