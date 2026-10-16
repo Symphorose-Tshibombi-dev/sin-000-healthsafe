@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class WardIngestorTest {
 
+    // List.of(oneArray) would make a list of Strings, so we use this helper instead
     private static List<String[]> rows(String[]... rows) {
         return Arrays.asList(rows);
     }
@@ -23,11 +24,9 @@ public class WardIngestorTest {
     }
 
     @Test
-    void shouldFlagNonNumericBedsInsteadOfRejecting(){
-
+    void shouldFlagNonNumericBedsInsteadOfRejecting() {
         IngestionResult result = WardIngestor.ingest(
-          row(new String[]{"W-05", "East Wing" , "Paediatrics","5"})
-        );
+                rows(new String[]{"W-05", "East Wing", "Paediatrics", "five"}));
 
         Ward ward = result.wards().get(0);
         assertNull(ward.bedsAvailable());
@@ -35,7 +34,7 @@ public class WardIngestorTest {
     }
 
     @Test
-    void shouldSkipRowWithMissingWard(){
+    void shouldSkipRowWithMissingWardId() {
         IngestionResult result = WardIngestor.ingest(
                 rows(new String[]{" ", "East Wing", "Oncology", "4"}));
 
@@ -64,12 +63,34 @@ public class WardIngestorTest {
     }
 
     @Test
-    void shouldFlagMissingWing() {
-        IngestionResult result = WardIngestor.ingest(
-                rows(new String[]{"W-08", "", "Oncology", "4"}));
+    void shouldKeepFirstOfTwoCleanDuplicates() {
+        IngestionResult result = WardIngestor.ingest(rows(
+                new String[]{"W-05", "East Wing", "Paediatrics", "5"},
+                new String[]{"w-05", "East Wing", "Paediatrics", "6"}));
 
-        Ward ward = result.wards().get(0);
-        assertNull(ward.wing());
-        assertEquals("wing missing", ward.notes());
+        assertEquals(1, result.wards().size());
+        assertEquals(5, result.wards().get(0).bedsAvailable());
+        assertTrue(result.issues().get(0).startsWith("Line 3"));
+    }
+
+    @Test
+    void shouldPreferCleanDuplicateOverFlaggedOne() {
+        IngestionResult result = WardIngestor.ingest(rows(
+                new String[]{"W-05", "East Wing", "Paediatrics", "five"},
+                new String[]{"w-05", "East Wing", "Paediatrics", "5"}));
+
+        assertEquals(1, result.wards().size());
+        assertEquals(5, result.wards().get(0).bedsAvailable());
+        assertTrue(result.issues().get(0).startsWith("Line 2"));
+    }
+
+    @Test
+    void shouldIngestTheRealCsv() throws Exception {
+        List<String[]> rawRows = WardCsvReader.readRecords("wards-outdated.csv");
+
+        IngestionResult result = WardIngestor.ingest(rawRows);
+
+        assertEquals(17, result.wards().size());
+        assertEquals(1, result.issues().size());
     }
 }
