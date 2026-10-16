@@ -22,4 +22,17 @@ public class WardIngestorTest {
         assertTrue(result.issues().isEmpty());
     }
 
+    @Test
+    void shouldFlagNonNumericBedsInsteadOfRejecting(){
+
+        IngestionResult result = WardIngestor.ingest(
+          row(new String[]{"W-05", "East Wing" , "Paediatrics","5"})
+        );
+
+        Ward ward = result.wards().get(0);
+        assertNull(ward.bedsAvailable());
+        assertTrue(ward.notes().contains("five"));
+    }
+
+
 }
