@@ -52,4 +52,24 @@ public class WardIngestorTest {
         assertTrue(result.wards().isEmpty());
         assertTrue(result.issues().get(0).contains("expected 4 columns"));
     }
+
+    @Test
+    void shouldFlagMissingWing() {
+        IngestionResult result = WardIngestor.ingest(
+                rows(new String[]{"W-08", "", "Oncology", "4"}));
+
+        Ward ward = result.wards().get(0);
+        assertNull(ward.wing());
+        assertEquals("wing missing", ward.notes());
+    }
+
+    @Test
+    void shouldFlagMissingWing() {
+        IngestionResult result = WardIngestor.ingest(
+                rows(new String[]{"W-08", "", "Oncology", "4"}));
+
+        Ward ward = result.wards().get(0);
+        assertNull(ward.wing());
+        assertEquals("wing missing", ward.notes());
+    }
 }
