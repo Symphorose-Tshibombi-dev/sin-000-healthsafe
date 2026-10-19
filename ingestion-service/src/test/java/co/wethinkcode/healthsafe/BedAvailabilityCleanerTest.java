@@ -103,4 +103,5 @@ public class BedAvailabilityCleanerTest {
         Integer result = BedAvailabilityCleaner.clean(rawBedsAvailability);
         assertNull(result);
     }
+
 }
