@@ -74,5 +74,12 @@ public class WardIngestor {
         return new Ward(wardId, wing, department, bedsAvailable, joinedNotes);
     }
 
-
+    private static Integer cleanBeds(String rawBeds, List<String> notes) {
+        try {
+            return BedAvailabilityCleaner.clean(rawBeds);
+        } catch (IllegalArgumentException exception) {
+            notes.add("bedsAvailable '" + rawBeds.trim() + "' was invalid - flagged for follow-up");
+            return null;
+        }
+    }
 }
