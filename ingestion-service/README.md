@@ -67,7 +67,9 @@ ingestion-service/
     ├── java/co/wethinkcode/healthsafe/IngestionServiceApp.java
     └── resources/wards-outdated.csv
 ```
-
+## Decisions
+- Beds above max.beds (default 200, set in limits.properties) are flagged as invalid.
+- Limitation: this is one limit for the whole hospital. A real system would let each ward have its own, set by an administrator.
 ## Build
 
 ```
