@@ -22,7 +22,37 @@ public class WardIngestor {
                 continue;
             }
 
+            Ward ward;
 
+            try{
+                ward = toWard(row);
+            }catch (IllegalArgumentException exception){
+                issues.add("Line " + line + ": " + exception.getMessage() + " - row skipped");
+                continue;
+            }
+
+            addWard(ward, line, wardsById, keptLine, issues);
+        }
+        return  new IngestionResult(new ArrayList<>(wardsById.values()),issues);
+    }
+
+    private static void addWard(Ward ward, int line, Map<String, Ward> wardsById,
+                                Map<String, Integer> keptLine, List<String> issues) {
+        String id = ward.wardId();
+        Ward existing = wardsById.get(id);
+
+        if (existing == null) {
+            wardsById.put(id, ward);
+            keptLine.put(id, line);
+        } else if (existing.hasNotes() && !ward.hasNotes()) {
+            issues.add("Line " + keptLine.get(id) + ": duplicate of " + id
+                    + " replaced by the cleaner record on line " + line);
+            wardsById.put(id, ward);
+            keptLine.put(id, line);
+        } else {
+            issues.add("Line " + line + ": duplicate of " + id
+                    + " (already kept from line " + keptLine.get(id) + ") - row skipped");
         }
     }
+
 }
