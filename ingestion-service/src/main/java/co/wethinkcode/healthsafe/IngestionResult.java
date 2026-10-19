@@ -1,4 +1,6 @@
 package co.wethinkcode.healthsafe;
 
-public class IngestionResult {
+import java.util.List;
+
+public record IngestionResult(List<Ward> wards, List<String> issues) {
 }
