@@ -55,4 +55,24 @@ public class WardIngestor {
         }
     }
 
+    private static Ward toWard(String[] row) {
+        String wardId = WardIdCleaner.clean(row[0]);
+        String wing = WingNameCleaner.clean(row[1]);
+        String department = DepartmentCleaner.clean(row[2]);
+
+        List<String> notes = new ArrayList<>();
+        if (wing == null) {
+            notes.add("wing missing");
+        }
+        if (department == null) {
+            notes.add("department missing");
+        }
+
+        Integer bedsAvailable = cleanBeds(row[3], notes);
+
+        String joinedNotes = notes.isEmpty() ? null : String.join("; ", notes);
+        return new Ward(wardId, wing, department, bedsAvailable, joinedNotes);
+    }
+
+
 }
