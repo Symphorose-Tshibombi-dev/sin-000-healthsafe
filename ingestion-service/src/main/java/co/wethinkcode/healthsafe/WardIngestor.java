@@ -1,6 +1,9 @@
 package co.wethinkcode.healthsafe;
 
 import java.util.*;
+/*
+This files handles four jobs cleaning the beds , handling duplicates or new  ward ID including the length of Csv file column.
+ */
 
 public class WardIngestor {
     private static final int EXPECTED_COLUMNS = 4;
