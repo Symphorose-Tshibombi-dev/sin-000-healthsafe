@@ -16,5 +16,9 @@ public class IngestionClientTest {
                         new Ward("W-04", "North Wing", "Oncology", null, "bedsAvailable '-1' was invalid - flagged for follow-up")
                 )))
                 .start(0);
+
+        IngestionClient client = new IngestionClient("http://localhost:" + fakeIngestion.port());
+
+        List<Ward> wards = client.fetchWards();
     }
 }
