@@ -67,6 +67,10 @@ Endpoint shapes below are illustrative, not a fixed spec to match byte-for-byte 
 reasonable field names/status codes are fine as long as the calling service can
 consume them.
 
+## Verification Code
+
+Code : WTC-BXDNAWRG
+
 | From | To | Call | Purpose |
 |---|---|---|---|
 | `ward-service` | `ingestion-service` | `GET /wards` → cleaned ward records | Populate its own ward/department list |
