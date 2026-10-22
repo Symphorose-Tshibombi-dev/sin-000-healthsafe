@@ -2,6 +2,7 @@ package co.wethinkcode.healthsafe;
 
 import io.javalin.Javalin;
 
+import java.util.Map;
 import java.util.Optional;
 
 public class WardServiceApp {
@@ -23,6 +24,8 @@ public class WardServiceApp {
 
             if (ward.isPresent()) {
                 ctx.json(ward.get());
+            }else {
+                ctx.status(404).json(Map.of("error", "Ward " + id + " not found"));
             }
         });
 
