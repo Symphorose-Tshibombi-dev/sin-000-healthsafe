@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 public class IngestionClientTest {
 
     @Test
@@ -17,8 +19,25 @@ public class IngestionClientTest {
                 )))
                 .start(0);
 
-        IngestionClient client = new IngestionClient("http://localhost:" + fakeIngestion.port());
+        try {
+            IngestionClient client = new IngestionClient("http://localhost:" + fakeIngestion.port());
 
-        List<Ward> wards = client.fetchWards();
+            List<Ward> wards = client.fetchWards();
+
+            assertEquals(2, wards.size());
+            assertEquals(3,wards.get(0).bedsAvailable());
+            assertEquals("W-01", wards.get(0).wardId());
+            assertNull(wards.get(1).bedsAvailable());
+            assertTrue(wards.get(1).notes().contains("-1"));
+
+        } finally {
+            fakeIngestion.stop();
+        }
+
+
+
+
     }
+
+
 }
