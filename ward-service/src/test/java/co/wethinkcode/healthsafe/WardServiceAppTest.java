@@ -14,7 +14,7 @@ public class WardServiceAppTest {
     @Test
     void mustReturnWardWhenIdExists() throws Exception{
         Javalin app = WardServiceApp.createApp(new WardService(List.of(
-        new Ward("W-01", "East Wing", "Cardiology", 3, null
+                new Ward("W-01", "East Wing", "Cardiology", 3, null)
         ))).start(0);
 
         try{
