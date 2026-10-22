@@ -51,4 +51,13 @@ public class IngestionClientTest {
             fakeIngestion.stop();
         }
     }
+
+    @Test
+    void shouldFailClearlyWhenIngestionIsNotRunning(){
+       IngestionClient client = new IngestionClient("http://localhost:1");
+
+       IllegalStateException stateException = assertThrows(IllegalStateException.class, client::fetchWards);
+
+       assertTrue(stateException.getMessage().contains("ingestion-service"));
+    }
 }
