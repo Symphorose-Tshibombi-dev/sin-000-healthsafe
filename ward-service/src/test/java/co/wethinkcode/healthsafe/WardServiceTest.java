@@ -11,7 +11,7 @@ public class WardServiceTest {
 
     @Test
 
-    void mustFindWadById(){
+    void mustFindWardById(){
         WardService findingService = new WardService(List.of(
                 new Ward("W-01", "East Wing", "Cardiology", 3, null),
                 new Ward("W-04", "North Wing", "Oncology", null, "flagged")
@@ -32,5 +32,19 @@ public class WardServiceTest {
 
         Optional<Ward> ward = findingService.findById("W-99");
         assertTrue(ward.isEmpty());
+    }
+
+    @Test
+
+    void mustReturnAllWards(){
+        WardService findingService = new WardService(List.of(
+                new Ward("W-01", "East Wing", "Cardiology", 3, null),
+                new Ward("W-04", "North Wing", "Oncology", null, "flagged")
+        ));
+
+        List<Ward> ward = findingService.findAll();
+
+        assertEquals(3, all.size());
+        assertEquals("W-01", all.get(0).wardId());
     }
 }

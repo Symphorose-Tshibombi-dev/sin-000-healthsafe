@@ -19,4 +19,8 @@ public class WardService {
         }
         return Optional.empty();
     }
+
+    public List<Ward> findAll(){
+        return List.of();
+    }
 }
