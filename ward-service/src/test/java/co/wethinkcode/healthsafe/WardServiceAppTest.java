@@ -20,7 +20,7 @@ public class WardServiceAppTest {
         try{
             HttpClient http = HttpClient.newHttpClient();
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("http://localhost:"+ app.port() + "/ward/W-01"))
+                    .uri(URI.create("http://localhost:" + app.port() + "/wards/W-01"))
                     .GET()
                     .build();
 
