@@ -1,5 +1,11 @@
 package co.wethinkcode.healthsafe;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.*;
 import java.util.List;
 
 public class IngestionClient {
@@ -8,7 +14,22 @@ public class IngestionClient {
     public IngestionClient(String baseUrl){
         this.baseUrl = baseUrl;
     }
-    public List<Ward> fetchWards(){
-        return null;
+    public List<Ward> fetchWards() {
+        try {
+            HttpClient http = HttpClient.newHttpClient();
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(baseUrl + "/wards"))
+                    .GET()
+                    .build();
+
+            HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString());
+
+            ObjectMapper mapper = new ObjectMapper();
+            return mapper.readValue(response.body(), new TypeReference<List<Ward>>() {
+            });
+        } catch (IOException | InterruptedException e) {
+            throw new IllegalStateException("Could not reach ingestion-service", e);
+        }
     }
 }
