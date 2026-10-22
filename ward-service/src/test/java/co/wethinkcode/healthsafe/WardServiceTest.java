@@ -22,4 +22,15 @@ public class WardServiceTest {
         assertTrue(ward.isPresent());
         assertEquals("East Wing", ward.get().wardName());
     }
+
+    @Test
+
+    void mustReturnEmptyWhenWardDoesNotExist(){
+        WardService findingService = new WardService(List.of(
+                new Ward("W-01", "East Wing", "Cardiology", 3, null)
+        ));
+
+        Optional<Ward> ward = findingService.findById("W-99");
+        assertTrue(ward.isEmpty());
+    }
 }
