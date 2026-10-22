@@ -25,6 +25,9 @@ public class WardService {
     }
 
     public List<String> findDepartments(){
-        return List.of();
+        return wards.stream()
+                .map(Ward::department)
+                .distinct()
+                .toList();
     }
 }
