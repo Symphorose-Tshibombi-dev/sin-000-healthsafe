@@ -29,6 +29,8 @@ public class WardServiceApp {
             }
         });
 
+        app.get("/wards", ctx -> ctx.json(service.findAll()));
+
         return app;
     }
 }
