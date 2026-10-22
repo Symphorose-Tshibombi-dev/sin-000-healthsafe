@@ -34,10 +34,21 @@ public class IngestionClientTest {
             fakeIngestion.stop();
         }
 
-
-
-
     }
 
+    @Test
+    void shouldFailWhenIngestionAnswersWithAnError(){
 
+        Javalin fakeIngestion = Javalin.create()
+                .get("/wards" , ctx -> ctx.status(500))
+                .start(0);
+        try{
+            IngestionClient client = new IngestionClient("http://localhost:" + fakeIngestion.port());
+            IllegalStateException exception = assertThrows(IllegalStateException.class, client::fetchWards );
+
+            assertTrue(exception.getMessage().contains("500"));
+        }finally {
+            fakeIngestion.stop();
+        }
+    }
 }
