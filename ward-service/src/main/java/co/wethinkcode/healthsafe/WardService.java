@@ -12,6 +12,11 @@ public class WardService {
     }
 
     public Optional<Ward> findById(String id){
+        for(Ward ward : wards){
+            if (ward.wardId().equals(id)){
+                return  Optional.of(ward);
+            }
+        }
         return Optional.empty();
     }
 }
