@@ -47,4 +47,19 @@ public class WardServiceTest {
         assertEquals(2, all.size());
         assertEquals("W-01", all.get(0).wardId());
     }
+
+    @Test
+    void mustReturnEachDepartmentOnce() {
+        WardService findingService = new WardService(List.of(
+                new Ward("W-01", "East Wing", "Cardiology", 3, null),
+                new Ward("W-02", "West Wing", "Cardiology", 5, null),
+                new Ward("W-04", "North Wing", "Oncology", null, "flagged")
+        ));
+
+        List<String> departments = findingService.findDepartments();
+
+        assertEquals(2, departments.size());
+        assertTrue(departments.contains("Cardiology"));
+        assertTrue(departments.contains("Oncology"));
+    }
 }

@@ -23,4 +23,8 @@ public class WardService {
     public List<Ward> findAll(){
         return wards;
     }
+
+    public List<String> findDepartments(){
+        return List.of();
+    }
 }
