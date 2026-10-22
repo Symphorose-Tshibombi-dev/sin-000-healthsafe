@@ -21,6 +21,6 @@ public class WardService {
     }
 
     public List<Ward> findAll(){
-        return List.of();
+        return wards;
     }
 }

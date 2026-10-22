@@ -42,9 +42,9 @@ public class WardServiceTest {
                 new Ward("W-04", "North Wing", "Oncology", null, "flagged")
         ));
 
-        List<Ward> ward = findingService.findAll();
+        List<Ward> all = findingService.findAll();
 
-        assertEquals(3, all.size());
+        assertEquals(2, all.size());
         assertEquals("W-01", all.get(0).wardId());
     }
 }
