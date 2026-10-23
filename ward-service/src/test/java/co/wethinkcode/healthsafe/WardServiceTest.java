@@ -20,7 +20,7 @@ public class WardServiceTest {
         Optional<Ward> ward = findingService.findById("W-01");
 
         assertTrue(ward.isPresent());
-        assertEquals("East Wing", ward.get().wardName());
+        assertEquals("East Wing", ward.get().wing());
     }
 
     @Test
