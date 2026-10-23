@@ -1,5 +1,7 @@
 package co.wethinkcode.healthsafe;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.javalin.Javalin;
 import org.junit.jupiter.api.Test;
 
@@ -81,5 +83,39 @@ public class WardServiceAppTest {
         } finally {
             app.stop();
         }
+    }
+
+    @Test
+
+    void mustReturnDepartments() throws Exception {
+        Javalin app = WardServiceApp.createApp( new WardService(List.of(
+                new Ward("W-01", "East Wing", "Cardiology", 3, null),
+                new Ward("W-02", "West Wing", "Cardiology", 5, null),
+                new Ward("W-04", "North Wing", "Oncology", null, "flagged")
+        ))).start(0);
+
+        try{
+            HttpClient http = HttpClient.newHttpClient();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("http://localhost:" + app.port() + "/departments"))
+                    .GET()
+                    .build();
+
+            HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString());
+
+            ObjectMapper mapper = new ObjectMapper();
+            List<String> deartments = mapper.readValue((response.body(), new TypeReference<List<String>>() {
+            });
+
+            assertEquals(List.of("Cardiology" , "Oncology"), departments);
+            assertEquals(200, response.statusCode());
+            assertTrue(response.body().contains("Cardiology"));
+            assertTrue(response.body().contains("Oncology"));
+
+        }finally{
+            app.stop();
+        }
+
+
     }
 }
