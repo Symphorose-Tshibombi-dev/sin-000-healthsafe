@@ -55,7 +55,45 @@ public class AlertLevelServiceAppTest {
         }
     }
 
+    @Test
+    void shouldChangeTheLevelAndReturnItLater() throws Exception {
+        Javalin app = AlertLevelServiceApp.createApp(new AlertLevelService()).start(0);
+        try {
+            HttpResponse<String> changed = put(app, "/alert-level", "{\"level\":5}");
+            assertEquals(200, changed.statusCode());
 
+            HttpResponse<String> response = get(app, "/alert-level");
+            assertEquals("{\"level\":5}", response.body());
+        } finally {
+            app.stop();
+        }
+    }
+
+    @Test
+    void shouldAnswer400WhenLevelIsOutOfRange() throws Exception {
+        Javalin app = AlertLevelServiceApp.createApp(new AlertLevelService()).start(0);
+        try {
+            HttpResponse<String> response = put(app, "/alert-level", "{\"level\":9}");
+
+            assertEquals(400, response.statusCode());
+            assertTrue(response.body().contains("between 0 and 8"));
+            assertEquals("{\"level\":0}", get(app, "/alert-level").body());
+        } finally {
+            app.stop();
+        }
+    }
+
+    @Test
+    void shouldAnswer400WhenBodyIsNotAValidLevel() throws Exception {
+        Javalin app = AlertLevelServiceApp.createApp(new AlertLevelService()).start(0);
+        try {
+            assertEquals(400, put(app, "/alert-level", "not json").statusCode());
+            assertEquals(400, put(app, "/alert-level", "{\"level\":\"high\"}").statusCode());
+            assertEquals(400, put(app, "/alert-level", "{}").statusCode());
+        } finally {
+            app.stop();
+        }
+    }
 
 
 }
