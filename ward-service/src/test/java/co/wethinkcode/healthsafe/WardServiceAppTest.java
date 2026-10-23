@@ -117,4 +117,26 @@ public class WardServiceAppTest {
 
 
     }
+
+    @Test
+    void mustAnswerOkOnHealth() throws Exception {
+        Javalin app = WardServiceApp.createApp(new WardService(List.of(
+                new Ward("W-01", "East Wing", "Cardiology", 3, null)
+        ))).start(0);
+
+        try {
+            HttpClient http = HttpClient.newHttpClient();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("http://localhost:" + app.port() + "/health"))
+                    .GET()
+                    .build();
+
+            HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString());
+
+            assertEquals(200, response.statusCode());
+            assertEquals("OK", response.body());
+        } finally {
+            app.stop();
+        }
+    }
 }
