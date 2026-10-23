@@ -42,4 +42,28 @@ public class AlertLevelClientTest {
         }
     }
 
+    @Test
+    void shouldThrowDownstreamUnavailableWhenTheLevelIsOutOfRange() {
+        Javalin fakeAlertService = Javalin.create()
+                .get("/alert-level", ctx -> ctx.json(Map.of("level", 12)))
+                .start(0);
+
+        try {
+            AlertLevelClient client = new AlertLevelClient("http://localhost:" + fakeAlertService.port());
+
+            assertThrows(DownstreamUnavailableException.class, client::currentLevel);
+        } finally {
+            fakeAlertService.stop();
+        }
+    }
+
+    @Test
+    void shouldThrowDownstreamUnavailableWhenAlertServiceIsNotRunning() {
+        AlertLevelClient client = new AlertLevelClient("http://localhost:1");
+
+        DownstreamUnavailableException error =
+                assertThrows(DownstreamUnavailableException.class, client::currentLevel);
+
+        assertTrue(error.getMessage().contains("alert-level-service"));
+    }
 }
