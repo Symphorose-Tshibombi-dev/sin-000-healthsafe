@@ -2,6 +2,7 @@ package co.wethinkcode.healthsafe;
 
 import io.javalin.Javalin;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -9,9 +10,22 @@ public class WardServiceApp {
 
     public static void main(String[] args) {
 
-        // TODO (Provides lists of wards and departments.)
-        // Add domain endpoints for ward-service here.
+            IngestionClient ingestion = new IngestionClient(ServiceConfig.ingestionUrl());
+
+            List<Ward> wards;
+            try {
+                wards = ingestion.fetchWards();
+            } catch (IllegalStateException error) {
+                System.err.println("Cannot start ward-service: " + error.getMessage());
+                System.exit(1);
+                return;
+            }
+
+            System.out.println("Loaded " + wards.size() + " wards from ingestion-service");
+            createApp(new WardService(wards)).start(7031);
+
     }
+
     public static Javalin createApp(WardService service) {
         Javalin app = Javalin.create();
 
