@@ -17,4 +17,24 @@ public class AlertLevelServiceTest {
 
         assertEquals(5, service.getLevel());
     }
+
+    @Test
+    void shouldAcceptBothEdgesOfTheRange() {
+        AlertLevelService service = new AlertLevelService();
+
+        service.setLevel(0);
+        assertEquals(0, service.getLevel());
+
+        service.setLevel(8);
+        assertEquals(8, service.getLevel());
+    }
+
+    @Test
+    void shouldRejectLevelsOutsideZeroToEight() {
+        AlertLevelService service = new AlertLevelService();
+
+        assertThrows(IllegalArgumentException.class, () -> service.setLevel(9));
+        assertThrows(IllegalArgumentException.class, () -> service.setLevel(-1));
+    }
+
 }
