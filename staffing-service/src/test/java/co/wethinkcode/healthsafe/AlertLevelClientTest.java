@@ -24,5 +24,22 @@ public class AlertLevelClientTest {
         }
     }
 
+    @Test
+    void shouldThrowDownstreamUnavailableWhenAlertServiceAnswersWithAnError() {
+        Javalin fakeAlertService = Javalin.create()
+                .get("/alert-level", ctx -> ctx.status(500))
+                .start(0);
+
+        try {
+            AlertLevelClient client = new AlertLevelClient("http://localhost:" + fakeAlertService.port());
+
+            DownstreamUnavailableException error =
+                    assertThrows(DownstreamUnavailableException.class, client::currentLevel);
+
+            assertTrue(error.getMessage().contains("500"));
+        } finally {
+            fakeAlertService.stop();
+        }
+    }
 
 }
