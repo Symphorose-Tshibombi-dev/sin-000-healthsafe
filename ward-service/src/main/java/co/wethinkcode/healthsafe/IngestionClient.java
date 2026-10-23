@@ -26,7 +26,7 @@ public class IngestionClient {
             HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString());
 
             if(response.statusCode() != 200){
-                throw new IllegalStateException("ingestion-service answered with status" + response.statusCode());
+                throw new IllegalStateException("ingestion-service answered with status " + response.statusCode());
 
             }
 
