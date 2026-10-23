@@ -24,12 +24,14 @@ public class WardServiceApp {
 
             if (ward.isPresent()) {
                 ctx.json(ward.get());
-            }else {
+            } else {
                 ctx.status(404).json(Map.of("error", "Ward " + id + " not found"));
             }
         });
 
         app.get("/wards", ctx -> ctx.json(service.findAll()));
+
+        app.get("/departments", ctx -> ctx.json(service.findDepartments()));
 
         return app;
     }
