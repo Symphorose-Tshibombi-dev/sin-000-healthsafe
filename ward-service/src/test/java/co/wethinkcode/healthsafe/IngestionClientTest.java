@@ -60,4 +60,24 @@ public class IngestionClientTest {
 
        assertTrue(stateException.getMessage().contains("ingestion-service"));
     }
+
+    @Test
+    void shouldReadWardsInTheShapeIngestionReallySends() {
+        Javalin fakeIngestion = Javalin.create()
+                .get("/wards", ctx -> ctx.contentType("application/json").result(
+                        "[{\"wardId\":\"W-01\",\"wing\":\"East Wing\",\"department\":\"Cardiology\",\"bedsAvailable\":3,\"notes\":null}]"))
+                .start(0);
+
+        try {
+            IngestionClient client = new IngestionClient("http://localhost:" + fakeIngestion.port());
+
+            List<Ward> wards = client.fetchWards();
+
+            assertEquals(1, wards.size());
+            assertEquals("W-01", wards.get(0).wardId());
+            assertEquals("Cardiology", wards.get(0).department());
+        } finally {
+            fakeIngestion.stop();
+        }
+    }
 }
