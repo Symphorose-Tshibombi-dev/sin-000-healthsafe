@@ -33,13 +33,32 @@ java -jar target/alert-level-service.jar
 
 Listens on port `7032`.
 
+## Endpoints
+
+| Call | Result |
+|---|---|
+| `GET /health` | `OK` |
+| `GET /alert-level` | `{"level": 0}`, the current Emergency Status |
+| `PUT /alert-level` with `{"level": 5}` | Stores the level (200) |
+
+A level outside 0 to 8, a body that isn't JSON, or a missing level answers **400**, and the old level stays.
+
+## Known limitations
+
+- The level is kept in memory, so it resets to 0 when the service restarts.
+- Anyone can change the level (no authentication).
+
+See the "Harden Stage 2 services" issue.
+
 ## Test
 
-No automated tests yet. Manually verify it's up:
-
 ```
-curl http://localhost:7032/health   # -> OK
+mvn test
 ```
 
-To add real tests, add JUnit 5 + the Surefire plugin to `pom.xml`, put tests under
-`src/test/java/co/wethinkcode/healthsafe/`, and run `mvn test`.
+To check a running service by hand:
+
+```
+curl.exe http://localhost:7032/health
+curl.exe http://localhost:7032/alert-level
+```
