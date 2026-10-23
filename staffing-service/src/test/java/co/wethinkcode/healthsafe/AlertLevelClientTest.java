@@ -1,0 +1,28 @@
+package co.wethinkcode.healthsafe;
+
+import io.javalin.Javalin;
+import org.junit.jupiter.api.Test;
+
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AlertLevelClientTest {
+
+    @Test
+    void shouldReadTheCurrentLevel() {
+        Javalin fakeAlertService = Javalin.create()
+                .get("/alert-level", ctx -> ctx.json(Map.of("level", 5)))
+                .start(0);
+
+        try {
+            AlertLevelClient client = new AlertLevelClient("http://localhost:" + fakeAlertService.port());
+
+            assertEquals(5, client.currentLevel());
+        } finally {
+            fakeAlertService.stop();
+        }
+    }
+
+
+}
