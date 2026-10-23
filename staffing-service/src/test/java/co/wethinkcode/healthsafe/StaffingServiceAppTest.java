@@ -51,4 +51,38 @@ public class StaffingServiceAppTest {
             app.stop();
         }
     }
+
+    @Test
+    void shouldAnswer404ForAnUnknownWard() throws Exception {
+        Javalin app = StaffingServiceApp.createApp(new StaffingService(
+                id -> {
+                    throw new WardNotFoundException(id);
+                }, () -> 0)).start(0);
+        try {
+            HttpResponse<String> response = get(app, "/schedule/W-99");
+
+            assertEquals(404, response.statusCode());
+            assertTrue(response.body().contains("W-99"));
+        } finally {
+            app.stop();
+        }
+    }
+
+    @Test
+    void shouldAnswer503WhenADownstreamServiceIsUnavailable() throws Exception {
+        Javalin app = StaffingServiceApp.createApp(new StaffingService(
+                id -> new WardInfo(id, "East Wing", "Cardiology"),
+                () -> {
+                    throw new DownstreamUnavailableException("Could not reach alert-level-service");
+                })).start(0);
+        try {
+            HttpResponse<String> response = get(app, "/schedule/W-01");
+
+            assertEquals(503, response.statusCode());
+            assertTrue(response.body().contains("alert-level-service"));
+        } finally {
+            app.stop();
+        }
+    }
+
 }
