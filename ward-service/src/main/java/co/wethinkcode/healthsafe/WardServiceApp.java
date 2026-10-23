@@ -2,15 +2,55 @@ package co.wethinkcode.healthsafe;
 
 import io.javalin.Javalin;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
 public class WardServiceApp {
 
     public static void main(String[] args) {
-        Javalin app = Javalin.create().start(7031);
 
+            IngestionClient ingestion = new IngestionClient(ServiceConfig.ingestionUrl());
+
+            List<Ward> wards;
+            try {
+                wards = ingestion.fetchWards();
+            } catch (IllegalStateException error) {
+                System.err.println("Cannot start ward-service: " + error.getMessage());
+
+                if (error.getCause() != null) {
+                    System.err.println("Reason: " + error.getCause());
+                }
+
+                System.exit(1);
+                return;
+            }
+
+            System.out.println("Loaded " + wards.size() + " wards from ingestion-service");
+            createApp(new WardService(wards)).start(7031);
+
+    }
+
+    public static Javalin createApp(WardService service) {
+        Javalin app = Javalin.create();
+
+        app.get("/wards/{id}", ctx -> {
+            String id = ctx.pathParam("id");
+            Optional<Ward> ward = service.findById(id);
+
+            if (ward.isPresent()) {
+                ctx.json(ward.get());
+            } else {
+                ctx.status(404).json(Map.of("error", "Ward " + id + " not found"));
+            }
+        });
+
+        app.get("/wards", ctx -> ctx.json(service.findAll()));
+
+        app.get("/departments", ctx -> ctx.json(service.findDepartments()));
         app.get("/health", ctx -> ctx.result("OK"));
 
-        // TODO (Provides lists of wards and departments.)
-        // Add domain endpoints for ward-service here.
+        return app;
     }
 }
 
