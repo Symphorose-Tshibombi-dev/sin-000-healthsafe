@@ -43,6 +43,7 @@ public class WardServiceApp {
         app.get("/wards", ctx -> ctx.json(service.findAll()));
 
         app.get("/departments", ctx -> ctx.json(service.findDepartments()));
+        app.get("/health", ctx -> ctx.result("OK"));
 
         return app;
     }
