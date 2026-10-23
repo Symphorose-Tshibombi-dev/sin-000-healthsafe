@@ -103,14 +103,13 @@ public class WardServiceAppTest {
 
             HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString());
 
-            ObjectMapper mapper = new ObjectMapper();
-            List<String> deartments = mapper.readValue((response.body(), new TypeReference<List<String>>() {
-            });
 
-            assertEquals(List.of("Cardiology" , "Oncology"), departments);
             assertEquals(200, response.statusCode());
-            assertTrue(response.body().contains("Cardiology"));
-            assertTrue(response.body().contains("Oncology"));
+
+            ObjectMapper mapper = new ObjectMapper();
+            List<String> departments = mapper.readValue(response.body(), new TypeReference<List<String>>() {});
+            assertEquals(List.of("Cardiology" , "Oncology"), departments);
+
 
         }finally{
             app.stop();
