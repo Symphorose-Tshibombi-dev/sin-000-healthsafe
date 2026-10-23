@@ -17,6 +17,11 @@ public class WardServiceApp {
                 wards = ingestion.fetchWards();
             } catch (IllegalStateException error) {
                 System.err.println("Cannot start ward-service: " + error.getMessage());
+
+                if (error.getCause() != null) {
+                    System.err.println("Reason: " + error.getCause());
+                }
+
                 System.exit(1);
                 return;
             }
