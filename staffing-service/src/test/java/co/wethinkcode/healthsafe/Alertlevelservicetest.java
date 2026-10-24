@@ -6,4 +6,9 @@ public class Alertlevelservicetest {
     void shouldStartAtLevelZero() {
         assertEquals(0, new AlertLevelService().getLevel());
     }
-}
+
+    @Test
+    void shouldStoreAValidLevel() {
+        AlertLevelService service = new AlertLevelService();
+    }
+
