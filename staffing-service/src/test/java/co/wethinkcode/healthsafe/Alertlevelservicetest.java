@@ -19,3 +19,13 @@ public class Alertlevelservicetest {
         assertThrows(IllegalArgumentException.class, () -> service.setLevel(9));
         assertThrows(IllegalArgumentException.class, () -> service.setLevel(-1));
     }
+
+    @Test
+    void shouldKeepTheOldLevelWhenANewOneIsRejected() {
+        AlertLevelService service = new AlertLevelService();
+        service.setLevel(3);
+
+        assertThrows(IllegalArgumentException.class, () -> service.setLevel(99));
+
+        assertEquals(3, service.getLevel());
+    }
