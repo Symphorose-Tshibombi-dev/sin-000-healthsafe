@@ -11,4 +11,9 @@ public class ServiceConfigTest {
         assertEquals("http://localhost:7031", ServiceConfig.wardUrl());
     }
 
+    @Test
+    void shouldReadAlertLevelUrl() {
+        assertEquals("http://localhost:7032", ServiceConfig.alertLevelUrl());
+    }
+
 }
