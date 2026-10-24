@@ -12,3 +12,10 @@ public class Alertlevelservicetest {
         AlertLevelService service = new AlertLevelService();
     }
 
+    @Test
+    void shouldRejectLevelsOutsideZeroToEight() {
+        AlertLevelService service = new AlertLevelService();
+
+        assertThrows(IllegalArgumentException.class, () -> service.setLevel(9));
+        assertThrows(IllegalArgumentException.class, () -> service.setLevel(-1));
+    }
