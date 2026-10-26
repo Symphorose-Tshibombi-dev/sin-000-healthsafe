@@ -4,6 +4,8 @@ import co.wethinkcode.healthsafe.exceptions.DownstreamUnavailableException;
 import co.wethinkcode.healthsafe.exceptions.WardNotFoundException;
 import org.junit.jupiter.api.Test;
 
+import java.util.*;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class StaffingServiceTest {
@@ -71,4 +73,19 @@ public class StaffingServiceTest {
 
         assertThrows(DownstreamUnavailableException.class, () -> service.scheduleFor("W-01"));
     }
+
+    @Test
+    void shouldPublishTheScheduleItWorksOut() {
+        List<Schedule> published = new ArrayList<>();
+        StaffingService service = new StaffingService(
+                id -> new WardInfo(id, "East Wing", "Cardiology"),
+                () -> 8,
+                published::add);
+
+        Schedule schedule = service.scheduleFor("W-01");
+
+        assertEquals(1, published.size());
+        assertEquals(schedule, published.get(0));
+    }
+
 }

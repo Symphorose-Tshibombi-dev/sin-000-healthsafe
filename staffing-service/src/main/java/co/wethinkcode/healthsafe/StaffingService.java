@@ -33,7 +33,9 @@ public class StaffingService {
         WardInfo ward = wards.findWard(wardId);
         int level = alertLevels.currentLevel();
 
-        return new Schedule(ward.wardId(), ward.department(), level, modeFor(level), doctorsFor(level, ward.department()));
+        Schedule schedule = new Schedule(ward.wardId(), ward.department(), level, modeFor(level), doctorsFor(level, ward.department()));
+        publisher.publish(schedule);
+        return schedule;
     }
 
     private static String modeFor(int level) {
