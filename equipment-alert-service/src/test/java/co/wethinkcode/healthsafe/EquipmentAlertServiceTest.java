@@ -38,4 +38,16 @@ public class EquipmentAlertServiceTest {
         assertThrows(AlertPublisher.AlertPublishException.class,
                 () -> new EquipmentAlertService(broken).submit(ALERT));
     }
+
+    @Test
+    void shouldListProcessedAlerts() {
+        EquipmentAlertService service = new EquipmentAlertService(new FakePublisher());
+        assertTrue(service.processedAlerts().isEmpty());
+
+        service.recordProcessed(ALERT);
+
+        assertEquals(1, service.processedAlerts().size());
+        assertEquals(ALERT, service.processedAlerts().get(0).alert());
+        assertNotNull(service.processedAlerts().get(0).processedAt());
+    }
 }
