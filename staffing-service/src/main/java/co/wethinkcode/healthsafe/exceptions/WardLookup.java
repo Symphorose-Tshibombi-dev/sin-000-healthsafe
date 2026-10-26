@@ -1,4 +1,6 @@
-package co.wethinkcode.healthsafe;
+package co.wethinkcode.healthsafe.exceptions;
+
+import co.wethinkcode.healthsafe.WardInfo;
 
 public interface WardLookup {
 

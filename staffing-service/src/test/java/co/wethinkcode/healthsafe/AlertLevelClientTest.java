@@ -1,5 +1,6 @@
 package co.wethinkcode.healthsafe;
 
+import co.wethinkcode.healthsafe.exceptions.DownstreamUnavailableException;
 import io.javalin.Javalin;
 import org.junit.jupiter.api.Test;
 

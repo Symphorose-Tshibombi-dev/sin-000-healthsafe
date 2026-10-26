@@ -1,5 +1,7 @@
 package co.wethinkcode.healthsafe;
 
+import co.wethinkcode.healthsafe.exceptions.DownstreamUnavailableException;
+import co.wethinkcode.healthsafe.exceptions.WardNotFoundException;
 import io.javalin.Javalin;
 
 import java.util.Map;

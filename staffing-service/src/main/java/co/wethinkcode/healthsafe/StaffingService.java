@@ -1,5 +1,8 @@
 package co.wethinkcode.healthsafe;
 
+import co.wethinkcode.healthsafe.exceptions.AlertLevelSource;
+import co.wethinkcode.healthsafe.exceptions.WardLookup;
+
 /**
  * Works out how many doctors must be on call for a ward.
  *

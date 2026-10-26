@@ -1,5 +1,8 @@
 package co.wethinkcode.healthsafe;
 
+import co.wethinkcode.healthsafe.exceptions.DownstreamUnavailableException;
+import co.wethinkcode.healthsafe.exceptions.WardLookup;
+import co.wethinkcode.healthsafe.exceptions.WardNotFoundException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 

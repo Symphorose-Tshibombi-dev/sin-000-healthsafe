@@ -1,4 +1,4 @@
-package co.wethinkcode.healthsafe;
+package co.wethinkcode.healthsafe.exceptions;
 
 public class WardNotFoundException extends RuntimeException {
 

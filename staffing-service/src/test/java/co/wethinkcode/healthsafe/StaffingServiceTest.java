@@ -1,5 +1,7 @@
 package co.wethinkcode.healthsafe;
 
+import co.wethinkcode.healthsafe.exceptions.DownstreamUnavailableException;
+import co.wethinkcode.healthsafe.exceptions.WardNotFoundException;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
