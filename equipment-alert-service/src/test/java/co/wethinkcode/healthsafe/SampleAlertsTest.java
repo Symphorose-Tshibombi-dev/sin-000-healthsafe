@@ -33,4 +33,18 @@ public class SampleAlertsTest {
         }
     }
 
+    @Test
+    void shouldRejectEveryInvalidSampleAndNameTheBadField() throws Exception {
+        assertTrue(samples.get("invalid").size() > 0);
+
+        for (JsonNode entry : samples.get("invalid")) {
+            EquipmentAlert alert = MAPPER.treeToValue(entry.get("alert"), EquipmentAlert.class);
+            String expectedField = entry.get("expectedError").asText();
+
+            IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+                    () -> EquipmentAlertValidator.validate(alert), entry.toString());
+
+            assertTrue(error.getMessage().contains(expectedField),
+                    "expected the error to mention " + expectedField + " but was: " + error.getMessage());
+        }
 }
