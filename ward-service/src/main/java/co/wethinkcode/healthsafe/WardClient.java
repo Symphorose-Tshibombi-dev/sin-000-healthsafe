@@ -1,9 +1,10 @@
 package co.wethinkcode.healthsafe;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.net.URI;
-import java.net.URLEncoder;
+import java.io.IOException;
+import java.net.*;
 import java.net.http.*;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -40,7 +41,15 @@ public class WardClient implements WardLookup {
                 throw new DownstreamUnavailableException(
                         "ward-service answered with status " + response.statusCode());
             }
+
+            return mapper.readValue(response.body(), WardInfo.class);
+        } catch (JsonProcessingException error) {
+            throw new DownstreamUnavailableException("ward-service sent data that could not be read", error);
+        } catch (IOException error) {
+            throw new DownstreamUnavailableException("Could not reach ward-service", error);
+        } catch (InterruptedException error) {
+            Thread.currentThread().interrupt();
+            throw new DownstreamUnavailableException("Interrupted while calling ward-service", error);
         }
-        return mapper.readValue(response.body(), WardInfo.class);
     }
 }
