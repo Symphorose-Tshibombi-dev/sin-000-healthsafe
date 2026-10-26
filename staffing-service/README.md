@@ -99,5 +99,3 @@ To add real tests, add JUnit 5 + the Surefire plugin to `pom.xml`, put tests und
 - The doctor counts are an assumption, not a rule from the hospital.
 - There is no retry: one slow answer from another service gives an immediate 503.
 - A ward with no department would show an empty department in the schedule.
-
-See the "Harden Stage 2 services" issue.
