@@ -27,7 +27,7 @@ public class SampleAlertsTest {
         assertTrue(samples.get("valid").size() > 0);
 
         for (JsonNode node : samples.get("valid")){
-            EquipmentAlert alert = MAPPER.treeToValue(node, EquipmentAlert.class);
+            EquipmentAlertServiceTest alert = MAPPER.treeToValue(node, EquipmentAlertServiceTest.class);
 
             assertDoesNotThrow(() -> EquipmentAlertVaildator.validate(alert), node.toString());
         }
@@ -38,7 +38,7 @@ public class SampleAlertsTest {
         assertTrue(samples.get("invalid").size() > 0);
 
         for (JsonNode entry : samples.get("invalid")) {
-            EquipmentAlert alert = MAPPER.treeToValue(entry.get("alert"), EquipmentAlert.class);
+            EquipmentAlertServiceTest alert = MAPPER.treeToValue(entry.get("alert"), EquipmentAlertServiceTest.class);
             String expectedField = entry.get("expectedError").asText();
 
             IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
