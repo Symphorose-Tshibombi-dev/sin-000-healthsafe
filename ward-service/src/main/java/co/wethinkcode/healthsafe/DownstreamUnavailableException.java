@@ -1,4 +1,12 @@
 package co.wethinkcode.healthsafe;
 
-public class DownstreamUnavailableException {
+public class DownstreamUnavailableException extends RuntimeException {
+
+    public DownstreamUnavailableException(String message) {
+        super(message);
+    }
+
+    public DownstreamUnavailableException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }
