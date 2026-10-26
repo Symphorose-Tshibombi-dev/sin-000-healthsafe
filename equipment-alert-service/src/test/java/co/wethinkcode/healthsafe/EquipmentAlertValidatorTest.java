@@ -1,8 +1,9 @@
 package co.wethinkcode.healthsafe;
 
+import org.junit.jupiter.api.Test;
+
 import javax.print.attribute.standard.Severity;
 
-import static org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class EquipmentAlertValidatorTest {
@@ -14,5 +15,12 @@ public class EquipmentAlertValidatorTest {
     private static String errorFor(EquipmentAlert alert) {
         return assertThrows(IllegalArgumentException.class, () -> EquipmentAlertValidator.validate(alert)).getMessage();
     }
+
+    @Test
+    void shouldAcceptAValidAlert() {
+        assertDoesNotThrow(() -> EquipmentAlertValidator.validate(valid()));
+    }
+
+
 
 }
