@@ -3,12 +3,11 @@ package co.wethinkcode.healthsafe;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.eclipse.jetty.server.ConnectionFactory;
 
-import javax.jms.Connection;
-import javax.jms.JMSException;
-import javax.jms.MessageConsumer;
-import javax.jms.Session;
+import javax.jms.*;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static jdk.internal.misc.Signal.handle;
 
 public class EquipmentAlertConsumer implements AutoCloseable{
 
@@ -34,6 +33,18 @@ public class EquipmentAlertConsumer implements AutoCloseable{
         consumer.setMessageListener(this::onMessage);
         connection.start();
     }
-
+    private void onMessage(Message message) {
+        try {
+            handle(message);
+            session.commit();
+        } catch (Exception error) {
+            System.err.println("Equipment alert failed, will be redelivered: " + error.getMessage());
+            try {
+                session.rollback();
+            } catch (JMSException rollbackError) {
+                System.err.println("Rollback failed: " + rollbackError.getMessage());
+            }
+        }
+    }
 
 }
