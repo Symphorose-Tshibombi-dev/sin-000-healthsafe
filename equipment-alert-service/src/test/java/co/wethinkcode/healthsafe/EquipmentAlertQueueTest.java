@@ -99,6 +99,31 @@ public class EquipmentAlertQueueTest {
         }
     }
 
+    @Test
+    void shouldParkAMalformedMessageOnTheDeadLetterQueueAndKeepGoing() throws Exception {
+        EquipmentAlertService service = new EquipmentAlertService(new JmsAlertPublisher(factory, QUEUE));
+        try (EquipmentAlertConsumer consumer = new EquipmentAlertConsumer(factory, QUEUE, service)) {
+            consumer.start();
+
+            sendRaw("this is not json");
+            sendRaw("{\"equipmentId\":\"VENT-12\",\"wardId\":\"W-05\",\"description\":\"x\"}"); // no severity
+            service.submit(alert("VENT-12")); // a good one behind the bad ones
+
+            waitFor(() -> service.processedAlerts().size() == 1);
+            assertEquals(1, service.processedAlerts().size());
+        }
+
+        Connection connection = factory.createConnection();
+        try {
+            connection.start();
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            MessageConsumer dlq = session.createConsumer(session.createQueue("ActiveMQ.DLQ"));
+            TextMessage parked = (TextMessage) dlq.receive(5000);
+            assertNotNull(parked, "the bad message should end up on the dead letter queue");
+        } finally {
+            connection.close();
+        }
+    }
 
 
 }
