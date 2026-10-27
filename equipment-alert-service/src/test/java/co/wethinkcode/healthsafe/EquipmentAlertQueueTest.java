@@ -1,13 +1,13 @@
 package co.wethinkcode.healthsafe;
 
+import javax.jms.*;
+import java.util.UUID;
+import org.junit.jupiter.api.*;
+import javax.print.attribute.standard.Severity;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.junit.jupiter.api.*;
 
-import javax.jms.Connection;
-import javax.jms.Session;
-import javax.print.attribute.standard.Severity;
-import java.util.UUID;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class EquipmentAlertQueueTest {
     private static final String QUEUE = "equipment-failure-queue";
@@ -49,6 +49,19 @@ public class EquipmentAlertQueueTest {
 
     private static EquipmentAlert alert(String equipmentId) {
         return new EquipmentAlert(equipmentId, "W-05", "Lost power", Severity.CRITICAL);
+    }
+
+    @Test
+    void shouldProcessAnAlertSentThroughTheQueue() throws Exception {
+        EquipmentAlertService service = new EquipmentAlertService(new JmsAlertPublisher(factory, QUEUE));
+        try (EquipmentAlertConsumer consumer = new EquipmentAlertConsumer(factory, QUEUE, service)) {
+            consumer.start();
+
+            service.submit(alert("VENT-12"));
+
+            waitFor(() -> service.processedAlerts().size() == 1);
+            assertEquals(alert("VENT-12"), service.processedAlerts().get(0).alert());
+        }
     }
 
 }
