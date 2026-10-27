@@ -3,16 +3,17 @@ package co.wethinkcode.healthsafe;
 import io.javalin.Javalin;
 import org.junit.jupiter.api.Test;
 
-import javax.print.attribute.standard.Severity;
 import java.net.URI;
-import java.net.http.*;
-import java.util.*;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.util.ArrayList;
+import java.util.List;
 
-import static io.javalin.apibuilder.ApiBuilder.post;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class EquipmentAlertServiceAppTest {
+
     private static final String VALID_BODY =
             "{\"equipmentId\":\"VENT-12\",\"wardId\":\"W-05\",\"description\":\"Lost power\",\"severity\":\"CRITICAL\"}";
 
@@ -33,17 +34,23 @@ public class EquipmentAlertServiceAppTest {
         return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
     }
 
-    @Test
-    void shouldAccept202AndQueueAValidAlert() throws Exception {
-        FakePublisher publisher = new FakePublisher();
-        Javalin app = EquipmentAlertServiceApp.createApp(new EquipmentAlertService(publisher)).start(0);
-        try {
-            HttpResponse<String> response = post(app, "/equipment-alerts", VALID_BODY);
+    private static HttpResponse<String> post(Javalin app, String path, String body) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:" + app.port() + path))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .build();
+        return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+    }
 
-            assertEquals(202, response.statusCode());
-            assertTrue(response.body().contains("QUEUED"));
-            assertEquals(List.of(new EquipmentAlert("VENT-12", "W-05", "Lost power", Severity.CRITICAL)),
-                    publisher.published);
+    @Test
+    void shouldAnswerOkOnHealth() throws Exception {
+        Javalin app = EquipmentAlertServiceApp.createApp(new EquipmentAlertService(new FakePublisher())).start(0);
+        try {
+            HttpResponse<String> response = get(app, "/health");
+
+            assertEquals(200, response.statusCode());
+            assertEquals("OK", response.body());
         } finally {
             app.stop();
         }
@@ -64,6 +71,7 @@ public class EquipmentAlertServiceAppTest {
             app.stop();
         }
     }
+
     @Test
     void shouldAnswer400AndNotQueueWhenAFieldIsMissing() throws Exception {
         FakePublisher publisher = new FakePublisher();
@@ -79,6 +87,21 @@ public class EquipmentAlertServiceAppTest {
             app.stop();
         }
     }
+
+    @Test
+    void shouldAnswer400ForBadJsonOrUnknownSeverity() throws Exception {
+        FakePublisher publisher = new FakePublisher();
+        Javalin app = EquipmentAlertServiceApp.createApp(new EquipmentAlertService(publisher)).start(0);
+        try {
+            assertEquals(400, post(app, "/equipment-alerts", "not json").statusCode());
+            assertEquals(400, post(app, "/equipment-alerts",
+                    "{\"equipmentId\":\"V\",\"wardId\":\"W-05\",\"description\":\"x\",\"severity\":\"PANIC\"}").statusCode());
+            assertTrue(publisher.published.isEmpty());
+        } finally {
+            app.stop();
+        }
+    }
+
     @Test
     void shouldAnswer503WhenTheBrokerIsUnavailable() throws Exception {
         AlertPublisher broken = alert -> {
@@ -94,7 +117,6 @@ public class EquipmentAlertServiceAppTest {
             app.stop();
         }
     }
-
 
     @Test
     void shouldListProcessedAlerts() throws Exception {

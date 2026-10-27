@@ -1,15 +1,22 @@
 package co.wethinkcode.healthsafe;
 
-import javax.jms.*;
-import java.util.UUID;
-import org.junit.jupiter.api.*;
-import javax.print.attribute.standard.Severity;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import javax.jms.Connection;
+import javax.jms.MessageConsumer;
+import javax.jms.Session;
+import javax.jms.TextMessage;
+import java.util.UUID;
+import java.util.function.BooleanSupplier;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class EquipmentAlertQueueTest {
+
     private static final String QUEUE = "equipment-failure-queue";
 
     private BrokerService broker;
@@ -35,6 +42,13 @@ public class EquipmentAlertQueueTest {
     void stopBroker() throws Exception {
         broker.stop();
         broker.waitUntilStopped();
+    }
+
+    private static void waitFor(BooleanSupplier condition) throws InterruptedException {
+        long deadline = System.currentTimeMillis() + 5000;
+        while (!condition.getAsBoolean() && System.currentTimeMillis() < deadline) {
+            Thread.sleep(25);
+        }
     }
 
     private void sendRaw(String body) throws Exception {
@@ -132,6 +146,4 @@ public class EquipmentAlertQueueTest {
 
         assertThrows(AlertPublisher.AlertPublishException.class, () -> service.submit(alert("VENT-12")));
     }
-
-
 }

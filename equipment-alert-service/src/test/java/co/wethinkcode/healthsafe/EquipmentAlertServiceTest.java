@@ -1,13 +1,13 @@
 package co.wethinkcode.healthsafe;
 
-import java.util.*;
 import org.junit.jupiter.api.Test;
 
-import javax.print.attribute.standard.Severity;
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class EquipmentAlertServiceTest {
-
 
     private static final EquipmentAlert ALERT = new EquipmentAlert("VENT-12", "W-05", "Lost power", Severity.CRITICAL);
 
@@ -27,6 +27,17 @@ public class EquipmentAlertServiceTest {
         new EquipmentAlertService(publisher).submit(ALERT);
 
         assertEquals(List.of(ALERT), publisher.published);
+    }
+
+    @Test
+    void shouldNotPublishAnInvalidAlert() {
+        FakePublisher publisher = new FakePublisher();
+        EquipmentAlertService service = new EquipmentAlertService(publisher);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> service.submit(new EquipmentAlert("VENT-12", "W-05", "Lost power", null)));
+
+        assertTrue(publisher.published.isEmpty());
     }
 
     @Test
