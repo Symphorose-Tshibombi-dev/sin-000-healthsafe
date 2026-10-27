@@ -1,0 +1,13 @@
+{
+  "valid": [
+    { "equipmentId": "VENT-12", "wardId": "W-05", "description": "Ventilator lost power", "severity": "CRITICAL" },
+    { "equipmentId": "PUMP-2", "wardId": "W-01", "description": "Infusion pump alarm", "severity": "HIGH" },
+    { "equipmentId": "BED-7", "wardId": "W-03", "description": "Bed rail loose", "severity": "LOW" }
+  ],
+  "invalid": [
+    { "expectedError": "equipmentId", "alert": { "wardId": "W-05", "description": "No equipment id", "severity": "LOW" } },
+    { "expectedError": "wardId", "alert": { "equipmentId": "VENT-12", "wardId": " ", "description": "Blank ward", "severity": "LOW" } },
+    { "expectedError": "description", "alert": { "equipmentId": "VENT-12", "wardId": "W-05", "severity": "HIGH" } },
+    { "expectedError": "severity", "alert": { "equipmentId": "VENT-12", "wardId": "W-05", "description": "No severity" } }
+  ]
+}
