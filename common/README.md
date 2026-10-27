@@ -2,20 +2,37 @@
 
 ## Overview
 
-Topic: `staffing-events-topic`
+Part of the [HealthSafe](../README.md) project. Holds the ActiveMQ broker shared by the
+services below. It is not a service itself, so it has no port of its own.
 
-Staffing updates are broadcast as Events via the broker to decouple the frontend from the Staffing Service.
+Two destinations live on this broker, and they are different on purpose:
 
-Part of the [HealthSafe](../README.md) project. Holds the ActiveMQ broker shared
-by the services below — not a service itself, so it has no port of its own.
+| | Topic `staffing-events-topic` | Queue `equipment-failure-queue` |
+|---|---|---|
+| Purpose | Broadcast "staffing changed" events | Hand each equipment failure to one worker |
+| Producer | `staffing-service` | `ward-service` |
+| Consumer(s) | `ward-service` (any service may subscribe) | `equipment-alert-service` |
+| Delivery | Every subscriber gets its own copy | Exactly one consumer gets each message |
+| If the consumer is down | A non-durable subscriber misses the event | The message waits on the broker until a consumer is back |
 
-- Producer: `staffing-service` (`../staffing-service`)
-- Consumer(s): ward-service
+Rule of thumb: use a **topic** when many services may care and the latest value wins, and a
+**queue** when someone must act on the message and losing one is not acceptable. The queue
+design is explained in [equipment-alert-service/README.md](../equipment-alert-service/README.md).
 
-Broker URL and topic name are shared via a common `co.wethinkcode.healthsafe.mq.MqConfig` class
-(`BROKER_URL`, `TOPIC`). It's identical in every participating service's own source
-tree — each service here is an independent Maven project with no shared parent pom,
-so the common package is duplicated rather than imported from one place.
+## Shared config
+
+Each service has its own copy of `co.wethinkcode.healthsafe.mq.MqConfig`, because every
+service is an independent Maven project with no shared parent pom. The copies differ on
+purpose, so each one only holds what that service uses:
+
+| Service | Constants |
+|---|---|
+| `staffing-service` | `BROKER_URL`, `TOPIC` |
+| `ward-service` | `BROKER_URL`, `TOPIC`, `QUEUE` |
+| `equipment-alert-service` | `BROKER_URL`, `QUEUE` |
+
+`BROKER_URL` is `tcp://localhost:61616`, `TOPIC` is `staffing-events-topic` and `QUEUE` is
+`equipment-failure-queue`. If you rename a destination, change it in every copy.
 
 ## Project structure
 
@@ -50,12 +67,30 @@ from their own directories at the project root).
 ## Test
 
 ```
-docker compose ps          # confirm the broker container is healthy
+docker compose ps          # the activemq container should show as running
 ```
 
-Once the TODOs below are implemented, verify end-to-end by publishing a message from
-`staffing-service` and confirming the consumer(s) receive it — e.g. via logs, or by
-watching the topic in the web console.
+Check the queue path by hand with the broker and `equipment-alert-service` running:
+
+1. Open http://localhost:8161, go to Queues, and look for `equipment-failure-queue`.
+2. `curl -X POST http://localhost:7034/equipment-alerts -H "Content-Type: application/json" -d '{"equipmentId":"VENT-12","wardId":"W-05","description":"Lost power","severity":"CRITICAL"}'`
+3. The console shows the message enqueued and then dequeued, and `curl http://localhost:7034/equipment-alerts` lists it as processed.
+
+## Status
+
+| Piece | State |
+|---|---|
+| `equipment-alert-service` consuming `equipment-failure-queue` | Done, with tests |
+| `ward-service` publishing to `equipment-failure-queue` | TODO |
+| `staffing-service` publishing to `staffing-events-topic` | TODO |
+| `ward-service` subscribing to `staffing-events-topic` | TODO |
+
+## Limitations
+
+- `docker-compose.yml` has no volume, so `docker compose down` throws away anything still
+  queued. A restart with `docker compose restart` keeps it.
+- No healthcheck, so `docker compose ps` only shows "running", not "ready for connections".
+- Educational prototype, not a live clinical alerting system.
 
 ## TODO
 

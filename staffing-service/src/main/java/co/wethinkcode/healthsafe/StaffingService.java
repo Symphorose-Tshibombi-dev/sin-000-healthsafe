@@ -1,6 +1,7 @@
 package co.wethinkcode.healthsafe;
 
 import co.wethinkcode.healthsafe.exceptions.AlertLevelSource;
+import co.wethinkcode.healthsafe.exceptions.SchedulePublisher;
 import co.wethinkcode.healthsafe.exceptions.WardLookup;
 
 /**
@@ -15,10 +16,16 @@ public class StaffingService {
 
     private final WardLookup wards;
     private final AlertLevelSource alertLevels;
+    private final SchedulePublisher publisher;
 
     public StaffingService(WardLookup wards, AlertLevelSource alertLevels) {
+        this(wards, alertLevels,schedule -> { });
+    }
+
+    public StaffingService(WardLookup wards, AlertLevelSource alertLevels, SchedulePublisher publisher) {
         this.wards = wards;
         this.alertLevels = alertLevels;
+        this.publisher = publisher;
     }
 
     public Schedule scheduleFor(String wardId) {
@@ -26,7 +33,9 @@ public class StaffingService {
         WardInfo ward = wards.findWard(wardId);
         int level = alertLevels.currentLevel();
 
-        return new Schedule(ward.wardId(), ward.department(), level, modeFor(level), doctorsFor(level, ward.department()));
+        Schedule schedule = new Schedule(ward.wardId(), ward.department(), level, modeFor(level), doctorsFor(level, ward.department()));
+        publisher.publish(schedule);
+        return schedule;
     }
 
     private static String modeFor(int level) {
