@@ -29,7 +29,7 @@ public class SampleAlertsTest {
         for (JsonNode node : samples.get("valid")){
             EquipmentAlertServiceTest alert = MAPPER.treeToValue(node, EquipmentAlertServiceTest.class);
 
-            assertDoesNotThrow(() -> EquipmentAlertVaildator.validate(alert), node.toString());
+            assertDoesNotThrow(() -> EquipmentAlertValidator.validate(alert), node.toString());
         }
     }
 
