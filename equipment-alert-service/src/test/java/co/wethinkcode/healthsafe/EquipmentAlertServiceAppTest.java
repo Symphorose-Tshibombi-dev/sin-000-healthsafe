@@ -49,7 +49,21 @@ public class EquipmentAlertServiceAppTest {
         }
     }
 
+    @Test
+    void shouldAccept202AndQueueAValidAlert() throws Exception {
+        FakePublisher publisher = new FakePublisher();
+        Javalin app = EquipmentAlertServiceApp.createApp(new EquipmentAlertService(publisher)).start(0);
+        try {
+            HttpResponse<String> response = post(app, "/equipment-alerts", VALID_BODY);
 
+            assertEquals(202, response.statusCode());
+            assertTrue(response.body().contains("QUEUED"));
+            assertEquals(List.of(new EquipmentAlert("VENT-12", "W-05", "Lost power", Severity.CRITICAL)),
+                    publisher.published);
+        } finally {
+            app.stop();
+        }
+    }
 
 
 }
