@@ -47,4 +47,30 @@ public class EquipmentAlertConsumer implements AutoCloseable{
         }
     }
 
+    ** Parses, validates and records one message. Throws if it can't, so the caller rolls back. */
+    void handle(Message message) throws Exception {
+        String messageId = message.getJMSMessageID();
+        if (messageId != null && finishedMessageIds.contains(messageId)) {
+            return; // redelivered after we had already finished it
+        }
+        if (!(message instanceof TextMessage text)) {
+            throw new IllegalArgumentException("Expected a JSON text message");
+        }
+        EquipmentAlert alert = mapper.readValue(text.getText(), EquipmentAlert.class);
+        EquipmentAlertValidator.validate(alert);
+
+        service.recordProcessed(alert);
+        System.out.println("PROCESSED equipment alert: " + alert);
+        if (messageId != null) {
+            finishedMessageIds.add(messageId);
+        }
+    }
+
+    @Override
+    public void close() throws JMSException {
+        if (connection != null) {
+            connection.close();
+        }
+    }
+
 }
