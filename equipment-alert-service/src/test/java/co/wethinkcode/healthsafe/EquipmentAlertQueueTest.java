@@ -125,5 +125,13 @@ public class EquipmentAlertQueueTest {
         }
     }
 
+    @Test
+    void shouldFailQuicklyWhenTheBrokerIsUnreachable() {
+        ActiveMQConnectionFactory nobodyHome = new ActiveMQConnectionFactory("tcp://localhost:1");
+        EquipmentAlertService service = new EquipmentAlertService(new JmsAlertPublisher(nobodyHome, QUEUE));
+
+        assertThrows(AlertPublisher.AlertPublishException.class, () -> service.submit(alert("VENT-12")));
+    }
+
 
 }
