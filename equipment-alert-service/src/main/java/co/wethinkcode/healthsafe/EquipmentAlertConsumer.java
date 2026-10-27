@@ -19,5 +19,10 @@ public class EquipmentAlertConsumer implements AutoCloseable{
     private Connection connection;
     private Session session;
 
+    public EquipmentAlertConsumer(ConnectionFactory connectionFactory, String queueName, EquipmentAlertService service) {
+        this.connectionFactory = connectionFactory;
+        this.queueName = queueName;
+        this.service = service;
+    }
 
 }
