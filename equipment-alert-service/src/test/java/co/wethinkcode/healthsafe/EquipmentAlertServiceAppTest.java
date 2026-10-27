@@ -64,6 +64,20 @@ public class EquipmentAlertServiceAppTest {
             app.stop();
         }
     }
+    @Test
+    void shouldAnswer400AndNotQueueWhenAFieldIsMissing() throws Exception {
+        FakePublisher publisher = new FakePublisher();
+        Javalin app = EquipmentAlertServiceApp.createApp(new EquipmentAlertService(publisher)).start(0);
+        try {
+            HttpResponse<String> response = post(app, "/equipment-alerts",
+                    "{\"equipmentId\":\"VENT-12\",\"description\":\"Lost power\",\"severity\":\"HIGH\"}");
 
+            assertEquals(400, response.statusCode());
+            assertTrue(response.body().contains("wardId"));
+            assertTrue(publisher.published.isEmpty());
+        } finally {
+            app.stop();
+        }
+    }
 
 }
