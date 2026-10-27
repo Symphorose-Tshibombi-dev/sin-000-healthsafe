@@ -11,5 +11,15 @@ public class EquipmentAlertValidator {
         if( alert == null){
             throw new IllegalArgumentException("Alert is required");
         }
+        requireText(alert.equipmentId(), "equipmentId");
+        requireText(alert.wardId(), "wardId");
+        requireText(alert.description(), "description");
+        if (alert.description().length() > MAX_DESCRIPTION_LENGTH) {
+            throw new IllegalArgumentException("description must be at most " + MAX_DESCRIPTION_LENGTH + " characters");
+        }
+        if (alert.severity() == null) {
+            throw new IllegalArgumentException("severity is required (LOW, MEDIUM, HIGH or CRITICAL)");
+        }
     }
+
 }
