@@ -47,7 +47,7 @@ public class EquipmentAlertConsumer implements AutoCloseable{
         }
     }
 
-    ** Parses, validates and records one message. Throws if it can't, so the caller rolls back. */
+    /** Parses, validates and records one message. Throws if it can't, so the caller rolls back. */
     void handle(Message message) throws Exception {
         String messageId = message.getJMSMessageID();
         if (messageId != null && finishedMessageIds.contains(messageId)) {
