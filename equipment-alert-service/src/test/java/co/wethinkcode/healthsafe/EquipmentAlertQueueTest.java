@@ -80,4 +80,25 @@ public class EquipmentAlertQueueTest {
         }
     }
 
+    @Test
+    void shouldGiveEachAlertToOnlyOneOfTwoConsumers() throws Exception {
+        EquipmentAlertService first = new EquipmentAlertService(new JmsAlertPublisher(factory, QUEUE));
+        EquipmentAlertService second = new EquipmentAlertService(new JmsAlertPublisher(factory, QUEUE));
+        try (EquipmentAlertConsumer a = new EquipmentAlertConsumer(factory, QUEUE, first);
+             EquipmentAlertConsumer b = new EquipmentAlertConsumer(factory, QUEUE, second)) {
+            a.start();
+            b.start();
+
+            for (int i = 0; i < 10; i++) {
+                first.submit(alert("DEV-" + i));
+            }
+
+            waitFor(() -> first.processedAlerts().size() + second.processedAlerts().size() >= 10);
+            Thread.sleep(200); // would reveal any duplicate delivery
+            assertEquals(10, first.processedAlerts().size() + second.processedAlerts().size());
+        }
+    }
+
+
+
 }
