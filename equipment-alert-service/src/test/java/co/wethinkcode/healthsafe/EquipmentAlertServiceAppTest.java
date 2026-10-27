@@ -1,5 +1,9 @@
 package co.wethinkcode.healthsafe;
 
+import io.javalin.Javalin;
+
+import java.net.URI;
+import java.net.http.*;
 import java.util.*;
 
 public class EquipmentAlertServiceAppTest {
@@ -14,5 +18,14 @@ public class EquipmentAlertServiceAppTest {
             published.add(alert);
         }
     }
+
+    private static HttpResponse<String> get(Javalin app, String path) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:" + app.port() + path))
+                .GET()
+                .build();
+        return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+    }
+
 
 }
