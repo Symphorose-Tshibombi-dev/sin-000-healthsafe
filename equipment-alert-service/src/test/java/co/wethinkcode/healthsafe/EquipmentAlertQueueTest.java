@@ -64,4 +64,20 @@ public class EquipmentAlertQueueTest {
         }
     }
 
+    @Test
+    void shouldKeepAlertsWhileTheConsumerIsDownAndProcessThemOnStart() throws Exception {
+        EquipmentAlertService service = new EquipmentAlertService(new JmsAlertPublisher(factory, QUEUE));
+
+        service.submit(alert("VENT-1"));
+        service.submit(alert("PUMP-2"));
+        assertTrue(service.processedAlerts().isEmpty());
+
+        try (EquipmentAlertConsumer consumer = new EquipmentAlertConsumer(factory, QUEUE, service)) {
+            consumer.start();
+
+            waitFor(() -> service.processedAlerts().size() == 2);
+            assertEquals(2, service.processedAlerts().size());
+        }
+    }
+
 }
