@@ -79,5 +79,39 @@ public class EquipmentAlertServiceAppTest {
             app.stop();
         }
     }
+    @Test
+    void shouldAnswer503WhenTheBrokerIsUnavailable() throws Exception {
+        AlertPublisher broken = alert -> {
+            throw new AlertPublisher.AlertPublishException("broker down", new RuntimeException());
+        };
+        Javalin app = EquipmentAlertServiceApp.createApp(new EquipmentAlertService(broken)).start(0);
+        try {
+            HttpResponse<String> response = post(app, "/equipment-alerts", VALID_BODY);
+
+            assertEquals(503, response.statusCode());
+            assertTrue(response.body().contains("NOT queued"));
+        } finally {
+            app.stop();
+        }
+    }
+
+
+    @Test
+    void shouldListProcessedAlerts() throws Exception {
+        EquipmentAlertService service = new EquipmentAlertService(new FakePublisher());
+        Javalin app = EquipmentAlertServiceApp.createApp(service).start(0);
+        try {
+            assertEquals("[]", get(app, "/equipment-alerts").body());
+
+            service.recordProcessed(new EquipmentAlert("VENT-12", "W-05", "Lost power", Severity.CRITICAL));
+
+            HttpResponse<String> response = get(app, "/equipment-alerts");
+            assertEquals(200, response.statusCode());
+            assertTrue(response.body().contains("VENT-12"));
+            assertTrue(response.body().contains("processedAt"));
+        } finally {
+            app.stop();
+        }
+    }
 
 }
