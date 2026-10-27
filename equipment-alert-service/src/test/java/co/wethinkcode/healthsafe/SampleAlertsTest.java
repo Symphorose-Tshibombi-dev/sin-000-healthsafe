@@ -9,6 +9,7 @@ import java.io.InputStream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/** Runs the validator over the alerts listed in src/test/resources/sample-alerts.json. */
 public class SampleAlertsTest {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -26,8 +27,8 @@ public class SampleAlertsTest {
     void shouldAcceptEveryValidSample() throws Exception {
         assertTrue(samples.get("valid").size() > 0);
 
-        for (JsonNode node : samples.get("valid")){
-            EquipmentAlertServiceTest alert = MAPPER.treeToValue(node, EquipmentAlertServiceTest.class);
+        for (JsonNode node : samples.get("valid")) {
+            EquipmentAlert alert = MAPPER.treeToValue(node, EquipmentAlert.class);
 
             assertDoesNotThrow(() -> EquipmentAlertValidator.validate(alert), node.toString());
         }
@@ -38,7 +39,7 @@ public class SampleAlertsTest {
         assertTrue(samples.get("invalid").size() > 0);
 
         for (JsonNode entry : samples.get("invalid")) {
-            EquipmentAlertServiceTest alert = MAPPER.treeToValue(entry.get("alert"), EquipmentAlertServiceTest.class);
+            EquipmentAlert alert = MAPPER.treeToValue(entry.get("alert"), EquipmentAlert.class);
             String expectedField = entry.get("expectedError").asText();
 
             IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
@@ -47,4 +48,5 @@ public class SampleAlertsTest {
             assertTrue(error.getMessage().contains(expectedField),
                     "expected the error to mention " + expectedField + " but was: " + error.getMessage());
         }
+    }
 }
