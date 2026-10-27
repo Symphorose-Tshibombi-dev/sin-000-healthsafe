@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.eclipse.jetty.server.ConnectionFactory;
 
 import javax.jms.Connection;
+import javax.jms.JMSException;
+import javax.jms.MessageConsumer;
 import javax.jms.Session;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -24,5 +26,14 @@ public class EquipmentAlertConsumer implements AutoCloseable{
         this.queueName = queueName;
         this.service = service;
     }
+
+    public void start() throws JMSException {
+        connection = connectionFactory.createConnection();
+        session = connection.createSession(true, Session.SESSION_TRANSACTED);
+        MessageConsumer consumer = session.createConsumer(session.createQueue(queueName));
+        consumer.setMessageListener(this::onMessage);
+        connection.start();
+    }
+
 
 }
