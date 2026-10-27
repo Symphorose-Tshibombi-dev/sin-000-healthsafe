@@ -1,15 +1,27 @@
 package co.wethinkcode.healthsafe;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.eclipse.jetty.server.ConnectionFactory;
 
-import javax.jms.*;
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.Session;
+import javax.jms.TextMessage;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static jdk.internal.misc.Signal.handle;
-
-public class EquipmentAlertConsumer implements AutoCloseable{
+/**
+ * Takes alerts off the queue one at a time and processes them.
+ *
+ * Guaranteed delivery comes from a TRANSACTED session: the broker only removes a message
+ * once we commit. If handling fails we roll back, the broker redelivers it, and after the
+ * redelivery limit (set on the ConnectionFactory) it parks the message on ActiveMQ.DLQ
+ * instead of retrying forever. That is "at least once", so we skip JMS message ids we
+ * have already finished.
+ */
+public class EquipmentAlertConsumer implements AutoCloseable {
 
     private final ConnectionFactory connectionFactory;
     private final String queueName;
@@ -33,6 +45,7 @@ public class EquipmentAlertConsumer implements AutoCloseable{
         consumer.setMessageListener(this::onMessage);
         connection.start();
     }
+
     private void onMessage(Message message) {
         try {
             handle(message);
@@ -72,5 +85,4 @@ public class EquipmentAlertConsumer implements AutoCloseable{
             connection.close();
         }
     }
-
 }
