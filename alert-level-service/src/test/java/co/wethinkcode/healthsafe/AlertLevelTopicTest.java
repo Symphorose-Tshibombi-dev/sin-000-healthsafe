@@ -1,10 +1,13 @@
 package co.wethinkcode.healthsafe;
 
 import io.javalin.Javalin;
+import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 import java.net.http.*;
 import java.util.*;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class AlertLevelTopicTest {
 
@@ -24,5 +27,21 @@ public class AlertLevelTopicTest {
                 .PUT(HttpRequest.BodyPublishers.ofString(body))
                 .build();
         return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+    }
+
+    @Test
+    void shouldPublishAValidChange() throws Exception {
+        FakePublisher publisher = new FakePublisher();
+        Javalin app = AlertLevelServiceApp.createApp(new AlertLevelService(), publisher).start(0);
+        try {
+            assertEquals(200, put(app, "{\"level\":5}").statusCode());
+
+            assertEquals(1, publisher.published.size());
+            assertEquals(0, publisher.published.get(0).previousLevel());
+            assertEquals(5, publisher.published.get(0).level());
+            assertNotNull(publisher.published.get(0).changedAt());
+        } finally {
+            app.stop();
+        }
     }
 }
