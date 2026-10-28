@@ -73,4 +73,20 @@ public class AlertLevelTopicTest {
             app.stop();
         }
     }
+
+    @Test
+    void shouldStillAnswer200WhenTheBrokerIsDown() throws Exception {
+        AlertLevelPublisher broken = change -> {
+            throw new AlertLevelPublisher.AlertLevelPublishException("broker down", new RuntimeException());
+        };
+        Javalin app = AlertLevelServiceApp.createApp(new AlertLevelService(), broken).start(0);
+        try {
+            HttpResponse<String> response = put(app, "{\"level\":4}");
+
+            assertEquals(200, response.statusCode());
+            assertEquals("{\"level\":4}", response.body());
+        } finally {
+            app.stop();
+        }
+    }
 }
