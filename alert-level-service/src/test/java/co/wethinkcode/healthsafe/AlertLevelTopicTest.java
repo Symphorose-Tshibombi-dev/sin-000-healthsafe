@@ -44,4 +44,33 @@ public class AlertLevelTopicTest {
             app.stop();
         }
     }
+
+    @Test
+    void shouldNotPublishWhenTheLevelDidNotChange() throws Exception {
+        FakePublisher publisher = new FakePublisher();
+        Javalin app = AlertLevelServiceApp.createApp(new AlertLevelService(), publisher).start(0);
+        try {
+            put(app, "{\"level\":3}");
+            put(app, "{\"level\":3}");
+
+            assertEquals(1, publisher.published.size());
+        } finally {
+            app.stop();
+        }
+    }
+
+
+    @Test
+    void shouldNotPublishAnInvalidLevel() throws Exception {
+        FakePublisher publisher = new FakePublisher();
+        Javalin app = AlertLevelServiceApp.createApp(new AlertLevelService(), publisher).start(0);
+        try {
+            assertEquals(400, put(app, "{\"level\":9}").statusCode());
+            assertEquals(400, put(app, "not json").statusCode());
+
+            assertTrue(publisher.published.isEmpty());
+        } finally {
+            app.stop();
+        }
+    }
 }
