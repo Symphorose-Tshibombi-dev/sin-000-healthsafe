@@ -7,14 +7,13 @@ services below. It is not a service itself, so it has no port of its own.
 
 Two destinations live on this broker, and they are different on purpose:
 
-| | Topic `staffing-events-topic` | Queue `equipment-failure-queue` |
-|---|---|---|
-| Purpose | Broadcast "staffing changed" events | Hand each equipment failure to one worker |
-| Producer | `staffing-service` | `ward-service` |
-| Consumer(s) | `ward-service` (any service may subscribe) | `equipment-alert-service` |
-| Delivery | Every subscriber gets its own copy | Exactly one consumer gets each message |
-| If the consumer is down | A non-durable subscriber misses the event | The message waits on the broker until a consumer is back |
-
+| | Topic `staffing-events-topic` | Topic `alert-level-topic` | Queue `equipment-failure-queue` |
+|---|---|---|---|
+| Producer | `staffing-service` | `alert-level-service` | `ward-service` |
+| Consumer(s) | `ward-service` (any service may subscribe) | any interested service | `equipment-alert-service` |
+| Delivery | Every subscriber gets a copy | Every subscriber gets a copy | Exactly one consumer gets each message |
+| Persistent? | No (latest event wins) | No (latest level wins) | Yes, kept until processed |
+| If the consumer is down | Misses the event | Misses the change, can `GET /alert-level` | Waits on the broker |
 Rule of thumb: use a **topic** when many services may care and the latest value wins, and a
 **queue** when someone must act on the message and losing one is not acceptable. The queue
 design is explained in [equipment-alert-service/README.md](../equipment-alert-service/README.md).
@@ -76,14 +75,26 @@ Check the queue path by hand with the broker and `equipment-alert-service` runni
 2. `curl -X POST http://localhost:7034/equipment-alerts -H "Content-Type: application/json" -d '{"equipmentId":"VENT-12","wardId":"W-05","description":"Lost power","severity":"CRITICAL"}'`
 3. The console shows the message enqueued and then dequeued, and `curl http://localhost:7034/equipment-alerts` lists it as processed.
 
+
+## MqConfig
+
+| Service | Constants |
+|---|---|
+| `staffing-service` | `BROKER_URL`, `TOPIC` |
+| `ward-service` | `BROKER_URL`, `TOPIC`, `QUEUE` |
+| `alert-level-service` | `BROKER_URL`, `LEVEL_TOPIC` (`alert-level-topic`) |
+| `equipment-alert-service` | `BROKER_URL`, `QUEUE` |
+
+
 ## Status
 
 | Piece | State |
 |---|---|
 | `equipment-alert-service` consuming `equipment-failure-queue` | Done, with tests |
-| `ward-service` publishing to `equipment-failure-queue` | TODO |
-| `staffing-service` publishing to `staffing-events-topic` | TODO |
-| `ward-service` subscribing to `staffing-events-topic` | TODO |
+| `ward-service` publishing to `equipment-failure-queue` (`POST /wards/{id}/equipment-failures`) | Done, with tests |
+| `staffing-service` publishing changed schedules to `staffing-events-topic` | Done, with tests |
+| `ward-service` subscribing to `staffing-events-topic` (`GET /wards/{id}/staffing`) | Done, with tests |
+| `alert-level-service` publishing level changes to `alert-level-topic` | Done, with tests |
 
 ## Limitations
 

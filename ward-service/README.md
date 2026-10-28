@@ -46,3 +46,14 @@ curl http://localhost:7031/health   # -> OK
 
 To add real tests, add JUnit 5 + the Surefire plugin to `pom.xml`, put tests under
 `src/test/java/co/wethinkcode/healthsafe/`, and run `mvn test`.
+
+## MQ
+
+- **Queue (publish):** `POST /wards/{id}/equipment-failures` with
+  `{"equipmentId":"VENT-12","description":"Lost power","severity":"CRITICAL"}` checks the ward
+  (404 if unknown), validates the body (400), and puts a persistent message on
+  `equipment-failure-queue` (202). If the broker is down it answers 503 "NOT queued".
+- **Topic (subscribe):** subscribes to `staffing-events-topic` and keeps the latest update per ward.
+  `GET /wards/{id}/staffing` returns it (404 until one has arrived). The subscription is
+  non-durable, so events sent while ward-service is down are missed. The next event replaces them.
+- ward-service still starts without the broker; only the MQ features are unavailable.
