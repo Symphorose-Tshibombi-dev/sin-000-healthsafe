@@ -26,7 +26,7 @@ Example answer:
 ```
 {"wardId":"W-01","department":"Cardiology","alertLevel":8,"mode":"CODE BLUE","doctorsOnCall":4}
 
-### When something goes wrong
+## When something goes wrong
 
 | Situation | Answer |
 |---|---|
