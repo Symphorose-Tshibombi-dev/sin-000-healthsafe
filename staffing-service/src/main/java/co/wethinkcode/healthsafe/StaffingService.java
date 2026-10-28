@@ -1,8 +1,11 @@
 package co.wethinkcode.healthsafe;
 
 import co.wethinkcode.healthsafe.exceptions.AlertLevelSource;
-import co.wethinkcode.healthsafe.exceptions.SchedulePublisher;
+import co.wethinkcode.healthsafe.exceptions.StaffingEventPublisher;
 import co.wethinkcode.healthsafe.exceptions.WardLookup;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Works out how many doctors must be on call for a ward.
@@ -11,21 +14,26 @@ import co.wethinkcode.healthsafe.exceptions.WardLookup;
  *  - the higher the Emergency Status, the more doctors:
  *    levels 0-2 -> 1, levels 3-5 -> 2, levels 6-7 -> 3, level 8 (Code Blue) -> 4
  *  - an ICU ward always gets one extra doctor
+ *  - a schedule is broadcast on the topic only when it differs from the last one
+ *    broadcast for that ward, so repeated reads do not spam subscribers
  */
 public class StaffingService {
 
     private final WardLookup wards;
     private final AlertLevelSource alertLevels;
-    private final SchedulePublisher publisher;
+    private final StaffingEventPublisher events;
+    private final Map<String, Schedule> lastBroadcast = new ConcurrentHashMap<>();
 
+    /** Without a publisher: schedules are computed but never broadcast. */
     public StaffingService(WardLookup wards, AlertLevelSource alertLevels) {
-        this(wards, alertLevels,schedule -> { });
+        this(wards, alertLevels, schedule -> {
+        });
     }
 
-    public StaffingService(WardLookup wards, AlertLevelSource alertLevels, SchedulePublisher publisher) {
+    public StaffingService(WardLookup wards, AlertLevelSource alertLevels, StaffingEventPublisher events) {
         this.wards = wards;
         this.alertLevels = alertLevels;
-        this.publisher = publisher;
+        this.events = events;
     }
 
     public Schedule scheduleFor(String wardId) {
@@ -34,8 +42,22 @@ public class StaffingService {
         int level = alertLevels.currentLevel();
 
         Schedule schedule = new Schedule(ward.wardId(), ward.department(), level, modeFor(level), doctorsFor(level, ward.department()));
-        publisher.publish(schedule);
+        broadcastIfChanged(schedule);
         return schedule;
+    }
+
+    /** Best effort: the caller still gets the schedule when the broker is down, and we retry next time. */
+    private void broadcastIfChanged(Schedule schedule) {
+        Schedule previous = lastBroadcast.put(schedule.wardId(), schedule);
+        if (schedule.equals(previous)) {
+            return;
+        }
+        try {
+            events.publish(schedule);
+        } catch (RuntimeException error) {
+            lastBroadcast.remove(schedule.wardId());
+            System.err.println("Staffing event for " + schedule.wardId() + " could not be sent: " + error.getMessage());
+        }
     }
 
     private static String modeFor(int level) {
