@@ -4,6 +4,7 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.junit.jupiter.api.*;
 
+import javax.jms.*;
 import java.util.UUID;
 
 public class JmsAlertLevelPublisherTest {
@@ -25,5 +26,31 @@ public class JmsAlertLevelPublisherTest {
         factory = new ActiveMQConnectionFactory("vm://" + name + "?create=false");
     }
 
+    @AfterEach
+    void stopBroker() throws Exception {
+        broker.stop();
+        broker.waitUntilStopped();
+    }
+
+
+    private static class Subscriber {
+        final Connection connection;
+        final MessageConsumer consumer;
+
+        Subscriber(ActiveMQConnectionFactory factory) throws Exception {
+            connection = factory.createConnection();
+            connection.start();
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            consumer = session.createConsumer(session.createTopic(TOPIC));
+        }
+
+        TextMessage receive(long millis) throws Exception {
+            return (TextMessage) consumer.receive(millis);
+        }
+
+        void close() throws Exception {
+            connection.close();
+        }
+    }
 
 }
