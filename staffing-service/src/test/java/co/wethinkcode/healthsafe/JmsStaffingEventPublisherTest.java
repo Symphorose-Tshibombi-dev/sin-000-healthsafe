@@ -1,5 +1,6 @@
 package co.wethinkcode.healthsafe;
 
+import com.fasterxml.jackson.databind.*;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.junit.jupiter.api.*;
@@ -9,7 +10,9 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/** Tests: JmsStaffingEventPublisher.publish() against a real in-memory ActiveMQ broker. */
 public class JmsStaffingEventPublisherTest {
+
     private static final String TOPIC = "staffing-events-topic";
     private static final Schedule SCHEDULE = new Schedule("W-01", "Cardiology", 5, "ELEVATED", 2);
 
@@ -45,6 +48,8 @@ public class JmsStaffingEventPublisherTest {
             consumer = session.createConsumer(session.createTopic(TOPIC));
         }
     }
+
+    // Handles: publish() sends the schedule as JSON with all five fields.
     @Test
     void shouldPublishTheScheduleAsJson() throws Exception {
         Subscriber subscriber = new Subscriber(factory);
@@ -62,5 +67,29 @@ public class JmsStaffingEventPublisherTest {
         } finally {
             subscriber.connection.close();
         }
+    }
+
+    // Handles: topic semantics. Two subscribers each receive their own copy.
+    @Test
+    void shouldDeliverToEverySubscriber() throws Exception {
+        Subscriber first = new Subscriber(factory);
+        Subscriber second = new Subscriber(factory);
+        try {
+            new JmsStaffingEventPublisher(factory, TOPIC).publish(SCHEDULE);
+
+            assertNotNull(first.consumer.receive(3000));
+            assertNotNull(second.consumer.receive(3000));
+        } finally {
+            first.connection.close();
+            second.connection.close();
+        }
+    }
+
+    // Handles: publish() catch block. Nothing listens on port 1, so it throws StaffingEventPublishException.
+    @Test
+    void shouldThrowWhenTheBrokerIsUnreachable() {
+        JmsStaffingEventPublisher publisher = new JmsStaffingEventPublisher(new ActiveMQConnectionFactory("tcp://localhost:1"), TOPIC);
+
+        assertThrows(StaffingEventPublisher.StaffingEventPublishException.class, () -> publisher.publish(SCHEDULE));
     }
 }
