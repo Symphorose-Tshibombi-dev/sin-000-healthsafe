@@ -75,14 +75,26 @@ Check the queue path by hand with the broker and `equipment-alert-service` runni
 2. `curl -X POST http://localhost:7034/equipment-alerts -H "Content-Type: application/json" -d '{"equipmentId":"VENT-12","wardId":"W-05","description":"Lost power","severity":"CRITICAL"}'`
 3. The console shows the message enqueued and then dequeued, and `curl http://localhost:7034/equipment-alerts` lists it as processed.
 
+
+## MqConfig
+
+| Service | Constants |
+|---|---|
+| `staffing-service` | `BROKER_URL`, `TOPIC` |
+| `ward-service` | `BROKER_URL`, `TOPIC`, `QUEUE` |
+| `alert-level-service` | `BROKER_URL`, `LEVEL_TOPIC` (`alert-level-topic`) |
+| `equipment-alert-service` | `BROKER_URL`, `QUEUE` |
+
+
 ## Status
 
 | Piece | State |
 |---|---|
 | `equipment-alert-service` consuming `equipment-failure-queue` | Done, with tests |
-| `ward-service` publishing to `equipment-failure-queue` | TODO |
-| `staffing-service` publishing to `staffing-events-topic` | TODO |
-| `ward-service` subscribing to `staffing-events-topic` | TODO |
+| `ward-service` publishing to `equipment-failure-queue` (`POST /wards/{id}/equipment-failures`) | Done, with tests |
+| `staffing-service` publishing changed schedules to `staffing-events-topic` | Done, with tests |
+| `ward-service` subscribing to `staffing-events-topic` (`GET /wards/{id}/staffing`) | Done, with tests |
+| `alert-level-service` publishing level changes to `alert-level-topic` | Done, with tests |
 
 ## Limitations
 

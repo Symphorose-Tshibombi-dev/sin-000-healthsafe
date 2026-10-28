@@ -2,100 +2,139 @@
 
 ## Overview
 
-Provides on-call schedules for doctors based on ward and status.
+Provides on-call schedules for doctors based on the ward and current Emergency Status.
 
-Part of the [HealthSafe](../README.md) project. Independent Maven module, no
-parent pom.
+Part of the [HealthSafe](../README.md) project. This is an independent Maven module with no parent POM.
 
-MQ: this service publishes to the ActiveMQ topic `staffing-events-topic` — see [`../common/`](../common). Broker URL and topic name come from the common `co.wethinkcode.healthsafe.mq.MqConfig` class alongside it in this module.
+## REST Integration
 
-REST: calls `ward-service` (`../ward-service`) to validate the ward and
-`alert-level-service` (`../alert-level-service`) to read the current Emergency
-Status before computing a schedule — see [Integration contracts](../README.md#integration-contracts)
-in the root README for the endpoint shapes.
+This service calls:
+
+- `ward-service` (`../ward-service`) to validate the ward.
+- `alert-level-service` (`../alert-level-service`) to retrieve the current Emergency Status before computing a schedule.
+
+See [Integration contracts](../README.md#integration-contracts) in the root README for the endpoint specifications.
 
 ## Endpoints
 
 | Call | Result |
 |---|---|
 | `GET /health` | `OK` |
-| `GET /schedule/{wardId}` | The schedule for that ward (200) |
+| `GET /schedule/{wardId}` | Returns the schedule for the specified ward (`200 OK`) |
 
-Example answer:
+Example response:
 
+```json
+{
+  "wardId": "W-01",
+  "department": "Cardiology",
+  "alertLevel": 8,
+  "mode": "CODE BLUE",
+  "doctorsOnCall": 4
+}
 ```
-{"wardId":"W-01","department":"Cardiology","alertLevel":8,"mode":"CODE BLUE","doctorsOnCall":4}
 
-## When something goes wrong
+## Error Handling
 
-| Situation | Answer |
+| Situation | Response |
 |---|---|
-| The ward does not exist | 404 with an error message |
-| ward-service or alert-level-service is down, too slow (over 3 seconds), answers with an error, or sends data we cannot read | 503 naming the service that failed |
+| The ward does not exist | `404 Not Found` with an error message |
+| `ward-service` or `alert-level-service` is unavailable, takes longer than 3 seconds to respond, returns an error, or sends unreadable data | `503 Service Unavailable`, identifying the service that failed |
 
-staffing-service has no calls at startup, so it starts even when the other services are down.
+`staffing-service` makes no calls to other services during startup. It can therefore start even when the other services are unavailable.
 
-## How the doctors are counted
+## How Doctors Are Counted
 
-These rules are our own assumption, because the project README does not fix them.
+These rules are project assumptions because the project README does not specify the hospital's staffing rules.
 
 | Alert level | Mode | Doctors on call |
-|---|---|---|
-| 0 to 2 | NORMAL | 1 |
-| 3 to 5 | ELEVATED | 2 |
-| 6 to 7 | HIGH | 3 |
-| 8 | CODE BLUE | 4 |
+|---|---|---:|
+| 0–2 | `NORMAL` | 1 |
+| 3–5 | `ELEVATED` | 2 |
+| 6–7 | `HIGH` | 3 |
+| 8 | `CODE BLUE` | 4 |
 
-An ICU ward always gets one extra doctor.
+An ICU ward always receives one additional doctor.
 
-## Project structure
+## Project Structure
 
-```
+```text
 staffing-service/
 ├── pom.xml
-└── src/main/java/co/wethinkcode/healthsafe/
-    ├── StaffingServiceApp.java
-    └── mq/
-        └── MqConfig.java
+└── src/
+    └── main/
+        └── java/
+            └── co/
+                └── wethinkcode/
+                    └── healthsafe/
+                        ├── StaffingServiceApp.java
+                        └── mq/
+                            └── MqConfig.java
 ```
 
 ## Build
 
-```
+Run the following command from the `staffing-service` directory:
+
+```bash
 mvn package
 ```
 
 ## Run
 
-Start ward-service and alert-level-service first, then:
+Start `ward-service` and `alert-level-service` first, then run:
 
-```
+```bash
 java -jar target/staffing-service.jar
 ```
 
-Listens on port `7033`. The addresses of the other services are in
-`src/main/resources/service.properties`.
+The service listens on port `7033`.
 
-Listens on port `7033`.
+The addresses of the other services are configured in:
 
+`src/main/resources/service.properties`
 
-## Test
+## Tests
 
-```
+Run the tests from the `staffing-service` directory:
+
+```bash
 mvn test
 ```
-To check a running service by hand:
-```
 
-curl http://localhost:7033/health   # -> OK
+To check a running service manually:
+
+```bash
+curl http://localhost:7033/health
 curl http://localhost:7033/schedule/W-01
 ```
 
-To add real tests, add JUnit 5 + the Surefire plugin to `pom.xml`, put tests under
-`src/test/java/co/wethinkcode/healthsafe/`, and run `mvn test`.
+## Known Limitations
 
-## Known limitations
+- The doctor counts are project assumptions, not confirmed hospital staffing rules.
+- There is no retry mechanism. A single slow response from another service results in an immediate `503 Service Unavailable`.
+- A ward without a department may appear in the schedule with an empty department field.
 
-- The doctor counts are an assumption, not a rule from the hospital.
-- There is no retry: one slow answer from another service gives an immediate 503.
-- A ward with no department would show an empty department in the schedule.
+## Message Queue (MQ)
+
+This service publishes staffing events to the ActiveMQ topic `staffing-events-topic`.
+
+The broker URL and topic name are configured in the common `co.wethinkcode.healthsafe.mq.MqConfig` class within this module. See [`common/`](../common/) for related project configuration.
+
+When `GET /schedule/{wardId}` computes a schedule that differs from the last schedule broadcast for that ward, it publishes a JSON message to `staffing-events-topic`.
+
+Example message:
+
+```json
+{
+  "wardId": "W-01",
+  "department": "Cardiology",
+  "alertLevel": 5,
+  "mode": "ELEVATED",
+  "doctorsOnCall": 2
+}
+```
+
+Publishing is best-effort. If the broker is unavailable, the REST response remains unaffected, and the next read attempts to publish again.
+
+Messages are non-persistent because a newer schedule can replace the previous one. Consumers that need the latest state should retrieve a fresh schedule through the REST endpoint.
