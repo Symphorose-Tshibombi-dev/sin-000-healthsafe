@@ -7,14 +7,13 @@ services below. It is not a service itself, so it has no port of its own.
 
 Two destinations live on this broker, and they are different on purpose:
 
-| | Topic `staffing-events-topic` | Queue `equipment-failure-queue` |
-|---|---|---|
-| Purpose | Broadcast "staffing changed" events | Hand each equipment failure to one worker |
-| Producer | `staffing-service` | `ward-service` |
-| Consumer(s) | `ward-service` (any service may subscribe) | `equipment-alert-service` |
-| Delivery | Every subscriber gets its own copy | Exactly one consumer gets each message |
-| If the consumer is down | A non-durable subscriber misses the event | The message waits on the broker until a consumer is back |
-
+| | Topic `staffing-events-topic` | Topic `alert-level-topic` | Queue `equipment-failure-queue` |
+|---|---|---|---|
+| Producer | `staffing-service` | `alert-level-service` | `ward-service` |
+| Consumer(s) | `ward-service` (any service may subscribe) | any interested service | `equipment-alert-service` |
+| Delivery | Every subscriber gets a copy | Every subscriber gets a copy | Exactly one consumer gets each message |
+| Persistent? | No (latest event wins) | No (latest level wins) | Yes, kept until processed |
+| If the consumer is down | Misses the event | Misses the change, can `GET /alert-level` | Waits on the broker |
 Rule of thumb: use a **topic** when many services may care and the latest value wins, and a
 **queue** when someone must act on the message and losing one is not acceptable. The queue
 design is explained in [equipment-alert-service/README.md](../equipment-alert-service/README.md).

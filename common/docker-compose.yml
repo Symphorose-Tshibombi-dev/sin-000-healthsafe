@@ -1,7 +1,18 @@
-version: "3.8"
 services:
   activemq:
     image: apache/activemq-classic:5.18.3
     ports:
       - "61616:61616"   # OpenWire (client connections)
       - "8161:8161"     # Web console
+    volumes:
+      - activemq-data:/opt/apache-activemq/data   # keeps queued messages across "docker compose down"
+    healthcheck:
+      # healthy once the broker accepts connections on the client port
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/127.0.0.1/61616'"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+
+volumes:
+  activemq-data:
