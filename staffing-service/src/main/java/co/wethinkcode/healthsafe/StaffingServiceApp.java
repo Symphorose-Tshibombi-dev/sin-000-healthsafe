@@ -1,8 +1,11 @@
 package co.wethinkcode.healthsafe;
 
 import co.wethinkcode.healthsafe.exceptions.DownstreamUnavailableException;
+import co.wethinkcode.healthsafe.exceptions.StaffingEventPublisher;
 import co.wethinkcode.healthsafe.exceptions.WardNotFoundException;
+import co.wethinkcode.healthsafe.mq.MqConfig;
 import io.javalin.Javalin;
+import org.apache.activemq.ActiveMQConnectionFactory;
 
 import java.util.Map;
 
@@ -12,8 +15,11 @@ public class StaffingServiceApp {
         WardClient wards = new WardClient(ServiceConfig.wardUrl());
         AlertLevelClient alertLevels = new AlertLevelClient(ServiceConfig.alertLevelUrl());
 
-        // no calls at startup: staffing-service starts even when the others are down
-        createApp(new StaffingService(wards, alertLevels)).start(7033);
+        StaffingEventPublisher events = new JmsStaffingEventPublisher(
+                new ActiveMQConnectionFactory(MqConfig.BROKER_URL), MqConfig.TOPIC);
+
+        // no calls at startup: staffing-service starts even when the others (or the broker) are down
+        createApp(new StaffingService(wards, alertLevels, events)).start(7033);
     }
 
     public static Javalin createApp(StaffingService service) {
@@ -36,4 +42,5 @@ public class StaffingServiceApp {
     }
 }
 
-// MQ TODO: publishes to ActiveMQ topic MqConfig.TOPIC at MqConfig.BROKER_URL (see co.wethinkcode.healthsafe.mq.MqConfig)
+// MQ: publishes a changed schedule to the ActiveMQ topic MqConfig.TOPIC at MqConfig.BROKER_URL
+// (see StaffingService.broadcastIfChanged and JmsStaffingEventPublisher). ward-service subscribes.

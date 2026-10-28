@@ -1,5 +1,6 @@
 package co.wethinkcode.healthsafe;
 
+import co.wethinkcode.healthsafe.exceptions.StaffingEventPublisher;
 import co.wethinkcode.healthsafe.exceptions.WardNotFoundException;
 import org.junit.jupiter.api.Test;
 
