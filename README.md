@@ -28,8 +28,8 @@ cleanup through synchronous REST calls to asynchronous MQ decoupling and alertin
 Plus [`common/`](common) (no port) — the shared ActiveMQ broker and MQ config notes
 for `staffing-events-topic`: Staffing updates are broadcast as Events via the broker to decouple the frontend from the Staffing Service.
 
-**Status:** scaffold only — build files, Javalin bootstrap, and TODOs are in place; no
-business logic has been implemented yet.
+**Status:** Stages 1 and 2 are done and tested (ingestion, ward, alert-level and
+staffing services). Stages 3 and 4 (ActiveMQ) are partly built; see each service's README.
 
 ## Your task
 
