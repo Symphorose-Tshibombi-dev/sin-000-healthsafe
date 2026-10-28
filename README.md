@@ -151,33 +151,24 @@ cd equipment-alert-service && mvn package && java -jar target/equipment-alert-se
 
 ## Test
 
-No automated tests exist yet (this is a scaffold). Each running service exposes
-`/health`, so sanity-check manually:
+Run the tests of one service:
+
+```
+cd ward-service
+mvn test
+```
+
+Run the tests of every service from the project root:
+
+```
+for s in ingestion-service ward-service alert-level-service staffing-service equipment-alert-service; do (cd $s && mvn test); done
+```
+
+Every running service also answers `/health`, for a quick manual check:
 
 ```
 curl http://localhost:7030/health   # -> OK
 ```
-
-To add real tests to a module, add JUnit 5 and Surefire to its `pom.xml`:
-
-```xml
-<dependency>
-  <groupId>org.junit.jupiter</groupId>
-  <artifactId>junit-jupiter</artifactId>
-  <version>5.10.2</version>
-  <scope>test</scope>
-</dependency>
-```
-
-```xml
-<plugin>
-  <groupId>org.apache.maven.plugins</groupId>
-  <artifactId>maven-surefire-plugin</artifactId>
-  <version>3.2.5</version>
-</plugin>
-```
-
-then add tests under that module's `src/test/java/...` and run:
 
 ```
 mvn test
