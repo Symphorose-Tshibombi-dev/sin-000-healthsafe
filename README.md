@@ -1,175 +1,302 @@
 # HealthSafe
 
-## Overview
+Hospital ward status and emergency staffing, built as a small set of independent Java services
+(Javalin + Maven) that talk to each other over HTTP and, for two flows, through an ActiveMQ broker.
 
-Hospital ward status and emergency staffing schedules.
+Every class lives in one flat package, `co.wethinkcode.healthsafe`. Each service folder is its own
+Maven project, with no parent pom.
 
-Domain entities: wards, wings, specialist departments.
-
-Every class in this repo lives in a single flat package, `co.wethinkcode.healthsafe`. HealthSafe is built
-as a small set of independent services, following a growth path from simple data
-cleanup through synchronous REST calls to asynchronous MQ decoupling and alerting:
-
-1. clean a messy legacy CSV export (`wards-outdated.csv`) — handled by **IngestionServiceApp**
-2. serve it up and act on it, via three REST services calling each other directly
-   over HTTP
-3. decouple the relevant services with an ActiveMQ topic (`staffing-events-topic`) instead of
-   direct calls — shared broker setup lives in [`common/`](common)
-4. raise the alarm on failure — handled by **EquipmentAlertServiceApp**
+## What each service does
 
 | Service | Folder | Port | Role |
 |---|---|---|---|
-| IngestionServiceApp | [`ingestion-service/`](ingestion-service) | 7030 | Parses and cleans `wards-outdated.csv` |
-| WardServiceApp | [`ward-service/`](ward-service) | 7031 | Provides lists of wards and departments. |
-| AlertLevelServiceApp | [`alert-level-service/`](alert-level-service) | 7032 | Tracks the hospital Emergency Status (0-8, 8 = full Code Blue). |
-| StaffingServiceApp | [`staffing-service/`](staffing-service) | 7033 | Provides on-call schedules for doctors based on ward and status. |
-| EquipmentAlertServiceApp | [`equipment-alert-service/`](equipment-alert-service) | 7034 | uses a Queue to guarantee delivery of critical medical equipment failure alerts. |
-
-Plus [`common/`](common) (no port) — the shared ActiveMQ broker and MQ config notes
-for `staffing-events-topic`: Staffing updates are broadcast as Events via the broker to decouple the frontend from the Staffing Service.
-
-**Status:** Stages 1 and 2 are done and tested (ingestion, ward, alert-level and
-staffing services). Stages 3 and 4 (ActiveMQ) are partly built; see each service's README.
-
-## Your task
-
-Each stage below builds on the last — do them in order. Every service already builds
-and runs (`/health` returns `OK`); your job is to fill in the `TODO`s.
-
-1. **Ingestion** (required) — in `IngestionServiceApp`, read and clean
-   `wards-outdated.csv` (see [ingestion-service/README.md](ingestion-service/README.md)
-   for the known data issues and a worked example) and expose the cleaned records
-   over REST for `ward-service` to consume.
-2. **REST services** (required) — implement `ward-service`, `alert-level-service`,
-   and `staffing-service` per the [Integration contracts](#integration-contracts)
-   below: wards/departments lookup, Emergency Status tracking, and on-call
-   scheduling that calls the other two services synchronously over HTTP.
-3. **MQ decoupling** (stretch) — replace the synchronous call from `ward-service`
-   to `staffing-service` with the `staffing-events-topic` broadcast described in
-   [common/README.md](common/README.md), so staffing updates reach `ward-service`
-   asynchronously instead.
-4. **Alerting** (stretch) — have `ward-service` publish to the
-   `equipment-failure-queue` when it detects an equipment failure, and implement
-   `equipment-alert-service` as the guaranteed-delivery consumer (see
-   [equipment-alert-service/README.md](equipment-alert-service/README.md)).
-
-Stage 1-2 are the required core; stages 3-4 are where you can show judgment about
-when to reach for a queue/topic instead of a direct call. There's no fixed time
-limit, but budget your effort so you have a working stage 1-2 before spending time
-on 3-4 — a complete core beats a half-done everything.
-
-Automated tests aren't required, but are a good way to show your work — see each
-service's `## Test` section for how to add JUnit 5.
-
-## Integration contracts
-
-Endpoint shapes below are illustrative, not a fixed spec to match byte-for-byte —
-reasonable field names/status codes are fine as long as the calling service can
-consume them.
-
-## Verification Code
-
-Code : WTC-BXDNAWRG
-
-| From | To | Call | Purpose |
-|---|---|---|---|
-| `ward-service` | `ingestion-service` | `GET /wards` → cleaned ward records | Populate its own ward/department list |
-| `staffing-service` | `ward-service` | `GET /wards/{id}` → `404` if unknown | Validate the ward before scheduling |
-| `staffing-service` | `alert-level-service` | `GET /alert-level` → `{ "level": 0-8 }` | Read current Emergency Status to size the on-call schedule |
-| `staffing-service` | `ward-service` (topic, stage 3) | publish to `staffing-events-topic` | Broadcast a schedule/status change |
-| `ward-service` (topic, stage 3) | — | subscribe to `staffing-events-topic` | React to staffing updates without polling |
-| `ward-service` (queue, stage 4) | `equipment-alert-service` | publish to `equipment-failure-queue` | Guarantee delivery of an equipment failure alert |
-
-## Project structure
+| ingestion-service | `ingestion-service/` | 7030 | Reads and cleans the messy `wards-outdated.csv`, then serves the clean wards at `GET /wards` |
+| ward-service | `ward-service/` | 7031 | Loads the clean wards from ingestion-service and serves wards and departments |
+| alert-level-service | `alert-level-service/` | 7032 | Keeps the hospital Emergency Status (0 to 8, where 8 is Code Blue) |
+| staffing-service | `staffing-service/` | 7033 | Works out how many doctors must be on call for a ward, using ward-service and alert-level-service |
+| equipment-alert-service | `equipment-alert-service/` | 7034 | Receives equipment failure alerts through an ActiveMQ queue with guaranteed delivery |
+| common | `common/` | none | The ActiveMQ broker setup (ports 61616 and 8161) and notes |
 
 ```
-healthsafe/
-├── README.md
-├── .gitignore
-├── ingestion-service/          (port 7030)
-│   ├── pom.xml
-│   ├── README.md
-│   └── src/main/
-│       ├── java/co/wethinkcode/healthsafe/IngestionServiceApp.java
-│       └── resources/wards-outdated.csv
-├── ward-service/          (port 7031)
-├── alert-level-service/          (port 7032)
-├── staffing-service/          (port 7033)
-├── common/
-│   ├── docker-compose.yml
-│   └── README.md
-└── equipment-alert-service/          (port 7034)
+                 GET /wards                  GET /wards/{id}
+ingestion  <-----------------  ward-service  <-----------------  staffing-service
+(7030)                          (7031)                           (7033)
+                                                                    |  GET /alert-level
+                                                                    v
+                                                              alert-level-service
+                                                              (7032)
+
+equipment-alert-service (7034)  <== equipment-failure-queue ==>  ActiveMQ broker (61616)
 ```
 
-## Build
+## Status
 
-Requirements: Java 17+, Maven 3.8+, Docker (for the broker in `common/`).
-
-Every folder here (`ingestion-service/`, each domain service, and `equipment-alert-service/`) is
-an **independent** Maven project — there is no parent/aggregator pom. Build one at a
-time, e.g.:
-
-```
-cd ward-service
-mvn package
-```
-
-...or build every module in the repo in one pass from the project root:
-
-```
-find . -name pom.xml -execdir mvn -q package \;
-```
-
-## Run
-
-```
-# ingestion
-cd ingestion-service && mvn package && java -jar target/ingestion-service.jar
-
-# domain services, each in its own terminal
-# terminal 1
-cd ward-service && mvn package && java -jar target/ward-service.jar
-# terminal 2
-cd alert-level-service && mvn package && java -jar target/alert-level-service.jar
-# terminal 3
-cd staffing-service && mvn package && java -jar target/staffing-service.jar
-
-# MQ broker (needed once the MQ-aware services above are wired up)
-cd common && docker compose up -d
-
-# alerting
-cd equipment-alert-service && mvn package && java -jar target/equipment-alert-service.jar
-```
-
-| Service | Port |
+| Stage | State |
 |---|---|
-| IngestionServiceApp (`ingestion-service`) | 7030 |
-| WardServiceApp (`ward-service`) | 7031 |
-| AlertLevelServiceApp (`alert-level-service`) | 7032 |
-| StaffingServiceApp (`staffing-service`) | 7033 |
-| EquipmentAlertServiceApp (`equipment-alert-service`) | 7034 |
+| 1. Ingestion | Done and tested |
+| 2. REST services (ward, alert-level, staffing) | Done and tested, and run together end to end |
+| 3. Topic `staffing-events-topic` | In progress: staffing-service announces each schedule through a publisher interface; the ActiveMQ publisher and the ward-service subscriber are still to do |
+| 4. Queue `equipment-failure-queue` | The consumer side (equipment-alert-service) is built and tested; the ward-service publisher is still to do. Alerts can be sent today through `POST /equipment-alerts` |
 
-## Test
+## Requirements
 
-Run the tests of one service:
+- Java 17 or newer (`java -version`)
+- Maven 3.8 or newer (`mvn -version`)
+- Docker, or Podman, for the message broker (only equipment-alert-service and the later stages need it)
+- A terminal for each running service. You need 5 terminals plus one to run the demo calls.
+
+## 1. Start the message broker
+
+The broker is ActiveMQ in a container. Pick the section that matches your computer.
+
+### Linux, with Docker
+
+```
+cd common
+docker compose up -d
+docker compose ps
+```
+
+### Linux, with Podman
+
+Older Podman versions (such as 3.4) have no `compose` command, so start the container directly:
+
+```
+podman run -d --name activemq -p 61616:61616 -p 8161:8161 docker.io/apache/activemq-classic:5.18.3
+podman ps
+```
+
+Next time, `podman start activemq` starts the same container again. If `podman run` says the name is
+already in use, run `podman start activemq` instead.
+
+### Windows, with Docker Desktop
+
+1. Install Docker Desktop and start it. Wait until it says it is running.
+2. Open PowerShell in the project folder:
+
+```
+cd common
+docker compose up -d
+docker compose ps
+```
+
+If `docker compose` is not found, use this instead:
+
+```
+docker run -d --name activemq -p 61616:61616 -p 8161:8161 apache/activemq-classic:5.18.3
+```
+
+### Check it works
+
+Open http://localhost:8161 in a browser and log in with `admin` / `admin`. The ActiveMQ page means the
+broker is ready.
+
+To stop it: `docker compose down` (or `docker stop activemq` / `podman stop activemq`).
+
+## 2. Build every service
+
+Run this once from the project root. The Maven "overlapping classes" warnings are normal.
+
+**Linux:**
+
+```
+for s in ingestion-service ward-service alert-level-service staffing-service equipment-alert-service; do (cd $s && mvn -q package -DskipTests); done
+```
+
+**Windows (PowerShell):**
+
+```
+foreach ($s in 'ingestion-service','ward-service','alert-level-service','staffing-service','equipment-alert-service') { Push-Location $s; mvn -q package -DskipTests; Pop-Location }
+```
+
+## 3. Start the services
+
+One terminal per service, in this order. They stay running, so leave each window open.
+Run each command from the project root.
+
+| Order | Linux | Windows (PowerShell) |
+|---|---|---|
+| 1 | `cd ingestion-service && java -jar target/ingestion-service.jar` | `cd ingestion-service; java -jar target\ingestion-service.jar` |
+| 2 | `cd ward-service && java -jar target/ward-service.jar` | `cd ward-service; java -jar target\ward-service.jar` |
+| 3 | `cd alert-level-service && java -jar target/alert-level-service.jar` | `cd alert-level-service; java -jar target\alert-level-service.jar` |
+| 4 | `cd staffing-service && java -jar target/staffing-service.jar` | `cd staffing-service; java -jar target\staffing-service.jar` |
+| 5 | `cd equipment-alert-service && java -jar target/equipment-alert-service.jar` | `cd equipment-alert-service; java -jar target\equipment-alert-service.jar` |
+
+- ward-service must start **after** ingestion-service. It loads its wards at startup and stops with a clear
+  message if it cannot reach ingestion-service. When it works you see `Loaded 17 wards from ingestion-service`.
+- equipment-alert-service needs the broker from step 1, and stops with a message if it is not running.
+- staffing-service makes no calls at startup, so it starts even when the others are down.
+
+## 4. Demo
+
+Use a sixth terminal. On Windows, type **`curl.exe`**, not `curl`, because plain `curl` in PowerShell is a
+different command.
+
+### a. Everything is up
+
+**Linux:**
+
+```
+for p in 7030 7031 7032 7033 7034; do curl -s http://localhost:$p/health; echo; done
+```
+
+**Windows:**
+
+```
+7030..7034 | ForEach-Object { curl.exe -s http://localhost:$_/health; "" }
+```
+
+Each one prints `OK`.
+
+### b. Wards and departments (ward-service)
+
+```
+curl http://localhost:7031/wards/W-01
+curl http://localhost:7031/departments
+curl -i http://localhost:7031/wards/W-99
+```
+
+- W-01 is East Wing, Cardiology, 3 beds.
+- The departments come back once each.
+- W-99 gives `404` and `{"error":"Ward W-99 not found"}`.
+
+### c. The on-call schedule changes with the Emergency Status
+
+```
+curl http://localhost:7033/schedule/W-01
+```
+
+At level 0 it shows `"mode":"NORMAL"` and 1 doctor. Now raise the alert level to 8 (Code Blue).
+
+**Linux:**
+
+```
+curl -X PUT -H "Content-Type: application/json" -d '{"level":8}' http://localhost:7032/alert-level
+```
+
+**Windows:**
+
+```
+Invoke-RestMethod -Method Put -Uri http://localhost:7032/alert-level -ContentType "application/json" -Body '{"level":8}'
+```
+
+Ask for the schedule again:
+
+```
+curl http://localhost:7033/schedule/W-01
+```
+
+It now shows `"mode":"CODE BLUE"` and 4 doctors. A level outside 0 to 8 is rejected with `400` and the old level
+stays.
+
+### d. Errors are handled, not crashes
+
+```
+curl -i http://localhost:7033/schedule/W-99
+```
+
+An unknown ward gives `404`. Now press **Ctrl+C** in the alert-level-service terminal and ask again:
+
+```
+curl -i http://localhost:7033/schedule/W-01
+```
+
+staffing-service answers `503` and names `alert-level-service`, and it keeps running. Start alert-level-service
+again and the schedule works again.
+
+### e. Equipment alerts through the queue (needs the broker)
+
+**Linux:**
+
+```
+curl -i -X POST http://localhost:7034/equipment-alerts -H "Content-Type: application/json" \
+  -d '{"equipmentId":"VENT-12","wardId":"W-05","description":"Ventilator lost power","severity":"CRITICAL"}'
+curl http://localhost:7034/equipment-alerts
+```
+
+**Windows:**
+
+```
+Invoke-RestMethod -Method Post -Uri http://localhost:7034/equipment-alerts -ContentType "application/json" -Body '{"equipmentId":"VENT-12","wardId":"W-05","description":"Ventilator lost power","severity":"CRITICAL"}'
+Invoke-RestMethod -Uri http://localhost:7034/equipment-alerts
+```
+
+- The first call answers `202` with `QUEUED`. The service log shows `PROCESSED equipment alert`.
+- The second call lists the alerts that were processed.
+- A bad alert (for example `"severity":"PANIC"`) answers `400` and nothing is queued.
+
+**Guaranteed delivery:** stop equipment-alert-service with Ctrl+C. In the broker page (http://localhost:8161,
+`admin` / `admin`) open **Queues**, then `equipment-failure-queue`, then **Send To**, paste the JSON body above,
+and tick **Persistent**. The queue shows 1 pending message. Start equipment-alert-service again and it processes
+the waiting message on startup.
+
+### Stop everything
+
+Press **Ctrl+C** in each service terminal, then stop the broker (see step 1).
+
+## Run the tests
+
+One service:
 
 ```
 cd ward-service
 mvn test
 ```
 
-Run the tests of every service from the project root:
+Every service, from the project root:
 
 ```
 for s in ingestion-service ward-service alert-level-service staffing-service equipment-alert-service; do (cd $s && mvn test); done
 ```
 
-Every running service also answers `/health`, for a quick manual check:
+The equipment-alert-service queue tests start their own in-memory broker, so they need no Docker.
+
+## Why a queue for equipment alerts and a topic for staffing
+
+| | Topic (`staffing-events-topic`) | Queue (`equipment-failure-queue`) |
+|---|---|---|
+| Who gets a message | Every subscriber gets a copy | Exactly one consumer gets it |
+| Meaning | "This changed, FYI" | "Someone must act on this" |
+| Consumer is down | A non-durable subscriber misses it | The message waits on the broker |
+| Losing one is | Fine, the next update corrects it | Not acceptable |
+
+## Assumptions and trade-offs
+
+The task did not fix these rules, so they are our choices:
+
+- **Doctors on call:** Emergency Status 0 to 2 gives 1 doctor, 3 to 5 gives 2, 6 to 7 gives 3, and 8 (Code Blue)
+  gives 4. An ICU ward always gets one extra doctor.
+- **The alert level lives in memory.** After a restart it goes back to 0.
+- **No authentication.** Anyone who can reach alert-level-service can change the Emergency Status.
+- **No retry.** One slow or failed answer from another service gives an immediate `503` from staffing-service.
+- **A ward with a missing department** would show an empty department in the schedule.
+- Processed equipment alerts are kept in memory and reset on restart.
+
+This is an educational prototype, not a live clinical system.
+
+## Troubleshooting
+
+| What you see | What to do |
+|---|---|
+| `Cannot start ward-service: Could not reach ingestion-service` | Start ingestion-service first and check `curl http://localhost:7030/health` |
+| equipment-alert-service stops with a broker message | Start the broker (step 1) and check http://localhost:8161 |
+| `Address already in use` | A service is already running on that port. Stop it, or find it with `lsof -i :7031` (Linux) or `netstat -ano \| findstr 7031` (Windows) |
+| `unrecognized command podman compose` | Your Podman is too old for `compose`. Use the `podman run` command in step 1 |
+| `curl` prints strange output in PowerShell | Use `curl.exe` instead of `curl` |
+| `cd` fails with a path like `C:UsersUser...` | You are in a Linux terminal. Use Linux paths such as `~/ElectivesProject/...` |
+| `mvn test` reports `Tests run: 0` | Maven is using an old test runner. Check the pom has `maven-surefire-plugin` version 3.2.5 |
+
+## Project structure
 
 ```
-curl http://localhost:7030/health   # -> OK
+sin-000-healthsafe/
+├── README.md
+├── ingestion-service/          (7030)
+├── ward-service/               (7031)
+├── alert-level-service/        (7032)
+├── staffing-service/           (7033)
+├── equipment-alert-service/    (7034)
+└── common/                     (broker: docker-compose.yml)
 ```
 
-```
-mvn test
-```
+Each service has its own `README.md` with its endpoints and tests.
