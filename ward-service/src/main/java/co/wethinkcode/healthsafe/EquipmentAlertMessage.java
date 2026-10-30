@@ -1,6 +1,4 @@
 package co.wethinkcode.healthsafe;
 
-public class EquipmentAlertMessage {
-    public EquipmentAlertMessage(String s, String s1, String lostPower, Severity severity) {
-    }
+public record EquipmentAlertMessage(String equipmentId, String wardId, String description, Severity severity) {
 }
